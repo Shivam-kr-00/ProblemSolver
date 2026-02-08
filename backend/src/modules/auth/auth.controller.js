@@ -3,50 +3,56 @@ import User from "./auth.model.js";
 import jwt from 'jsonwebtoken';
 import { redisClient } from '../../config/redis.js';
 import { env } from '../../config/env.js';
+import ApiResponse from "../../utils/apiResponse.js";
+import logger from "../../utils/logger.js"; 
 
-
-
-export const signup = async (req, res) => {
-    console.log('Raw request body:', req.body);
-    console.log('Request headers:', req.headers);
-
-    const { name, email, password } = req.body || {};
+export const signup = async (req, res, next) => {
     try {
+        const { name, email, password } = req.body || {};
+
         if (!name || !email || !password) {
-            return res.status(400).json({ message: "Name, email, and password are required" });
+            const error = new Error("Name, email, and password are required");
+            error.statusCode = 400;
+            throw error;
         }
+
         const userExist = await User.findOne({ email });
         if (userExist) {
-            return res.status(400).json({ message: "User already exists" });
+            const error = new Error("User already exists");
+            error.statusCode = 400;
+            throw error;
         }
-
+ 
         const user = await User.create({ name, email, password });
-        const { accessToken, refreshToken } = generateToken(user._id);
+        
+        logger.info(`User created successfully: ${user.email}`);
 
+        const { accessToken, refreshToken } = generateToken(user._id);
         await storeRefreshToken(user._id, refreshToken);
         setCookies(res, accessToken, refreshToken);
 
-        res.status(201).json({
-            user: {
+        res.status(201).json(
+            new ApiResponse(201, {
                 id: user._id,
                 name: user.name,
-                email: user.email,
-            },
-            message: "User created successfully"
-        });
+                email: user.email
+            }, "User created successfully")
+        );
     } catch (err) {
-        console.log("Error in signup controller:", err.message);
-        res.status(500).json({ message: "Internal server error" });
+         next(err);
     }
 };
 
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({ message: "Email and Password are required" });
+            const error = new Error("Email and Password are required");
+            error.statusCode = 400;
+            throw error;
         }
+
         const user = await User.findOne({ email }).select("+password");
 
         if (user && (await user.comparePassword(password))) {
@@ -54,70 +60,80 @@ export const login = async (req, res) => {
             await storeRefreshToken(user._id, refreshToken);
             setCookies(res, accessToken, refreshToken);
 
-            res.status(200).json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-            });
+            logger.info(`User logged in: ${email}`);
+
+
+            res.status(200).json(
+                new ApiResponse(200, {
+                    _id: user._id,
+                    name: user.name,
+                    email: user.email
+                }, "Login successful")
+            );
         } else {
-            res.status(401).json({ message: "Invalid email or password" });
+            const error = new Error("Invalid email or password");
+            error.statusCode = 401;
+            throw error;
         }
     } catch (error) {
-        console.log("Error in login controller:", error.message);
-        res.status(500).json({ message: "Internal server error" });
+        next(error);
     }
 };
 
-export const logout = async (req, res) => {
+export const logout = async (req, res, next) => {
     try {
         const refreshToken = req.cookies?.refreshToken;
         if (refreshToken) {
             try {
                 const decoded = jwt.verify(refreshToken, env.refreshSecret);
                 await redisClient.del(decoded.userId.toString());
+                logger.info(`Redis session cleared for user: ${decoded.userId}`);
             } catch (err) {
-                console.log("Token already expired or invalid during logout");
+                // Info log for cleanup skip is fine as it's not a critical error
+                logger.info("Logout: Redis cleanup skipped (token expired)");
             }
         }
 
         res.clearCookie('accessToken');
         res.clearCookie('refreshToken');
-        res.status(200).json({ message: "Logged out successfully" });
-
+        
+        res.status(200).json(
+            new ApiResponse(200, null, "Logged out successfully")
+        );
     } catch (error) {
-        console.log("Error in Logout controller:", error.message);
-        res.status(500).json({ message: "Internal server error" });
+        next(error);
     }
 };
 
-// refresh new access token automatically
-export const refreshAccessToken = async (req, res) => {
+export const refreshAccessToken = async (req, res, next) => {
     try {
         const refreshTokenFromCookie = req.cookies.refreshToken;
 
         if (!refreshTokenFromCookie) {
-            return res.status(401).json({ message: "No refresh token found" });
+            const error = new Error("No refresh token found");
+            error.statusCode = 401;
+            throw error;
         }
 
         let decoded;
         try {
             decoded = jwt.verify(refreshTokenFromCookie, env.refreshSecret);
         } catch (err) {
-            // Handle specific JWT errors
-            if (err.name === 'TokenExpiredError') {
-                return res.status(401).json({ message: "Refresh token expired" });
-            }
-            return res.status(401).json({ message: "Invalid refresh token" });
+            const message = err.name === 'TokenExpiredError' ? "Refresh token expired" : "Invalid refresh token";
+            const error = new Error(message);
+            error.statusCode = 401;
+            throw error; 
         }
 
         const storedRefreshToken = await redisClient.get(decoded.userId.toString());
 
         if (storedRefreshToken !== refreshTokenFromCookie) {
-            return res.status(401).json({ message: "Session expired or invalid" });
+            const error = new Error(`Session Mismatch: Potential token reuse for user ${decoded.userId}`);
+            error.statusCode = 401;
+            throw error; 
         }
 
         const accessToken = jwt.sign({ userId: decoded.userId }, env.accessSecret, { expiresIn: '15m' });
-
 
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
@@ -126,12 +142,12 @@ export const refreshAccessToken = async (req, res) => {
             maxAge: 15 * 60 * 1000,
         });
 
-        return res.status(200).json({ message: "Access token refreshed successfully" });
+        logger.info(`Access token refreshed for user: ${decoded.userId}`);
+
+        res.status(200).json(
+            new ApiResponse(200, null, "Access token refreshed successfully")
+        );
+    } catch (error) {
+        next(error);
     }
-    catch (error) {
-        console.log("Error in refreshAccessToken controller:", error.message);
-        if (!res.headersSent) {
-            return res.status(500).json({ message: "Internal server error" });
-        }
-    }
-}
+};

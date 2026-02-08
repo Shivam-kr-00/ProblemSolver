@@ -1,4 +1,4 @@
-import User from "../modules/auth/auth.model";
+import User from "../modules/auth/auth.model.js";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { ROLES } from "../constants.js";
@@ -13,13 +13,14 @@ export const protectRoute = async (req, res, next) => {
         }
 
         try {
-            const decoded = jwt.verify(token, env.jwtSecret);
+            const decoded = jwt.verify(token, env.accessSecret);
             const user = await User.findById(decoded.userId).select("-password");
 
             if (!user) {
                 return res.status(401).json({ message: "Unauthorized! User not found." })
 
             }
+
             req.user = user;
             next();
         } catch (error) {
