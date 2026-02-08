@@ -61,29 +61,47 @@ const authSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
     },
+    totalContributions: {
+    type: Number,
+    default: 0,
+},
+
+problemsCreated: {
+    type: Number,
+    default: 0,
+},
+
+tasksCompleted: {
+    type: Number,
+    default: 0,
+},
+
 },
     {
         timestamps: true
     });
 
 // Pre-save hook to hash password before saving
-authSchema.pre('save', async function (next) {
+authSchema.pre('save', async function () {
     if (!this.isModified('password')) {
-        return next();
+        return;
     }
     try {
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
-        next();
     } catch (error) {
-        next(error);
+        throw error;
     }
 });
 
 // Method to compare password during login
 authSchema.methods.comparePassword = async function (candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
-}
+    try {       
+        return await bcrypt.compare(candidatePassword, this.password);
+    } catch (error) {
+        throw new Error(error);
+    }
+};
 
 const User = mongoose.model('User', authSchema);
 

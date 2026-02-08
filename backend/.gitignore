@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Environment Variables (CRITICAL: Never upload these!)
+.env
+.env.local
+.env.development
+.env.production
+
+# Backend Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS specific files
+.DS_Store
+thumbs.db
+
+# Build/Dist files (if you use TypeScript or Babel)
+dist/
+build/
+
+# Database / Local Storage
+# If you ever use a local SQL lite db or temporary uploads
+/public/temp/
+*.sqlite
+
+# Editor directories
+.vscode/
+.idea/
