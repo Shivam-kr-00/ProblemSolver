@@ -15,11 +15,15 @@ export const PROBLEM_STATUS = {
 
 
 export const TASK_STATUS = {
-  OPEN: "OPEN",
-  CLAIMED: "CLAIMED",
-  SUBMITTED: "SUBMITTED",
-  VERIFIED: "VERIFIED",
+  OPEN: "OPEN",                 // visible to all
+  ASSIGNED: "ASSIGNED",         // claimed by a user
+  IN_PROGRESS: "IN_PROGRESS",   // user actively working
+  IN_REVIEW: "IN_REVIEW",       // PR submitted
+  COMPLETED: "COMPLETED",       // PR merged
+  REOPENED: "REOPENED",         // PR rejected
+  CANCELLED: "CANCELLED",       // admin/manual close
 };
+
 
 export const ROUTES = {
   HOME: "/",
