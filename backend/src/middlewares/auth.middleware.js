@@ -1,7 +1,6 @@
 import User from "../modules/auth/auth.model.js";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
-import { ROLES } from "../constants.js";
 
 export const protectRoute = async (req, res, next) => {
 
@@ -36,13 +35,4 @@ export const protectRoute = async (req, res, next) => {
         res.status(500).json({ message: "Internal server error" });
     }
 
-}
-
-export const adminRoute = async (req, res, next) => {
-    if (req.user && req.user.role === ROLES.ADMIN) {
-        next();
-    }
-    else {
-        res.status(403).json({ message: "Access Denied! Admins only." });
-    }
 }
