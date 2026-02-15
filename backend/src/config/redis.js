@@ -14,11 +14,11 @@ if (!global.redis) {
 redisClient = global.redis;
 
 redisClient.on('connect', () => {
-  console.log('🚀 Successfully connected to Redis!');
+  console.log(' Successfully connected to Redis!');
 });
 
 redisClient.on('error', (err) => {
-  console.error('❌ Redis Connection Error:', err);
+  console.error(' Redis Connection Error:', err);
 });
 
 export { redisClient };
