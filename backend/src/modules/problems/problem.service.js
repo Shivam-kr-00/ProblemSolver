@@ -3,6 +3,7 @@ import Problem from './problem.model.js';
 import User from '../auth/auth.model.js';
 import Task from '../tasks/task.model.js';
 import { PROBLEM_STATUS, TASK_STATUS, ROLES } from '../../constants.js';
+import apiError from '../../utils/apiError.js';
 
 export const createProblemService = async (problemData, userId) => {
 
@@ -16,7 +17,7 @@ export const createProblemService = async (problemData, userId) => {
 
 export const getProblemByIdService = async (problemId) => {
     if (!mongoose.Types.ObjectId.isValid(problemId)) {
-        throw new Error('Invalid problem ID')
+        throw new apiError('Invalid problem ID', 400)
     }
 
     const problem = await Problem.findById(problemId)
@@ -24,7 +25,7 @@ export const getProblemByIdService = async (problemId) => {
         .populate('contributors', 'name')
 
     if (!problem) {
-        throw new Error('Problem not found')
+        throw new apiError('Problem not found', 404)
     }
 
     return problem
@@ -46,16 +47,12 @@ export const getAllProblemsService = async (query) => {
 export const markAsPendingContributor = async (repoUrl, githubUsername) => {
     const user = await User.findOne({ githubUsername });
     if (!user) {
-        const error = new Error("User not found on our platform");
-        error.statusCode = 404;
-        throw error;
+        throw new apiError("User not found on our platform", 404);
     }
 
     const problem = await Problem.findOne({ githubRepoUrl: repoUrl });
     if (!problem) {
-        const error = new Error("Problem not found for this repo");
-        error.statusCode = 404;
-        throw error;
+        throw new apiError("Problem not found for this repo", 404);
     }
 
     const isPending = problem.pendingContributors.includes(user._id);
@@ -73,18 +70,15 @@ export const addContributorByGithubMerge = async (repoUrl, githubUsername) => {
     // 1. Find User by GitHub handle
     const user = await User.findOne({ githubUsername });
     if (!user) {
-        const error = new Error(`User with GitHub handle ${githubUsername} not found`);
-        error.statusCode = 404;
-        throw error;
+        throw new apiError(`User with GitHub handle ${githubUsername} not found`, 404);
     }
 
     // 2. Find the Problem linked to the repository
     const problem = await Problem.findOne({ githubRepoUrl: repoUrl });
     if (!problem) {
-        const error = new Error(`No problem found for repository: ${repoUrl}`);
-        error.statusCode = 404;
-        throw error;
+        throw new apiError(`No problem found for repository: ${repoUrl}`, 404);
     }
+
     const isAlreadyContributor = problem.contributors.includes(user._id);
 
     if (!isAlreadyContributor) {
@@ -103,32 +97,30 @@ export const addContributorByGithubMerge = async (repoUrl, githubUsername) => {
 export const removePendingContributor = async (repoUrl, githubUsername) => {
     const user = await User.findOne({ githubUsername });
     if (!user) {
-        const error = new Error(`User with GitHub handle ${githubUsername} not found`);
-        error.statusCode = 404;
-        throw error;
+        throw new apiError(`User with GitHub handle ${githubUsername} not found`, 404);
     }
 
     const problem = await Problem.findOne({ githubRepoUrl: repoUrl });
     if (!problem) {
-        const error = new Error(`No problem found for repository: ${repoUrl}`);
-        error.statusCode = 404;
-        throw error;
+        throw new apiError(`No problem found for repository: ${repoUrl}`, 404);
     }
+
     problem.pendingContributors = problem.pendingContributors.filter(
         contributorId => contributorId.toString() !== user._id.toString()
     );
+
     await problem.save();
     return problem;
 }
 
 export const updateProblemStatusService = async (problemId) => {
     if (!mongoose.Types.ObjectId.isValid(problemId)) {
-        throw new Error("Invalid problem ID");
+        throw new apiError("Invalid problem ID", 400);
     }
 
     const problem = await Problem.findById(problemId);
     if (!problem) {
-        throw new Error("Problem not found");
+        throw new apiError("Problem not found", 404);
     }
 
     if (problem.status === PROBLEM_STATUS.CANCELLED) {
@@ -165,20 +157,20 @@ export const updateProblemStatusService = async (problemId) => {
 
 export const addRepoToProblemService = async (problemId, repoUrl) => {
     if (!mongoose.Types.ObjectId.isValid(problemId)) {
-        throw new Error("Invalid problem ID");
+        throw new apiError("Invalid problem ID", 400);
     }
 
     if (!repoUrl) {
-        throw new Error("Repository URL is required");
+        throw new apiError("Repository URL is required", 400);
     }
 
     const problem = await Problem.findById(problemId);
     if (!problem) {
-        throw new Error("Problem not found");
+        throw new apiError("Problem not found", 404);
     }
 
     if (problem.repositoryUrl) {
-        throw new Error("Repository already linked to this problem");
+        throw new apiError("Repository already linked to this problem", 400);
     }
 
     problem.repositoryUrl = repoUrl;
