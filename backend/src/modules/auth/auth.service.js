@@ -62,3 +62,67 @@ export const setCookies = (res, accessToken, refreshToken) => {
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 }
+
+// refresh token
+
+export const refreshTokenService = async (refreshToken) => {
+
+    if (!refreshToken) {
+        throw new apiError("Refresh token is required", 401);
+    }
+
+    if (!env.refreshSecret || !env.accessSecret) {
+        throw new apiError("JWT secrets are not configured properly", 500);
+    }
+
+    let decoded;
+
+    try {
+        decoded = jwt.verify(refreshToken, env.refreshSecret);
+    } catch (error) {
+        throw new apiError("Invalid or expired refresh token", 401);
+    }
+
+    const userId = decoded.userId;
+
+    if (!userId) {
+        throw new apiError("Invalid refresh token payload", 401);
+    }
+
+    // Check if token exists in Redis
+    const storedToken = await redisClient.get(userId.toString());
+
+    if (!storedToken) {
+        throw new apiError("Refresh token not found. Please login again.", 401);
+    }
+
+    if (storedToken !== refreshToken) {
+        throw new apiError("Refresh token mismatch", 403);
+    }
+
+    // Generate new tokens (Rotation)
+    const newAccessToken = jwt.sign(
+        { userId },
+        env.accessSecret,
+        { expiresIn: '15m' }
+    );
+
+    const newRefreshToken = jwt.sign(
+        { userId },
+        env.refreshSecret,
+        { expiresIn: '7d' }
+    );
+
+    // Replace old refresh token in Redis
+    await redisClient.set(
+        userId.toString(),
+        newRefreshToken,
+        "EX",
+        7 * 24 * 60 * 60
+    );
+
+    return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken
+    };
+};

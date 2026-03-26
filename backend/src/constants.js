@@ -24,6 +24,12 @@ export const TASK_STATUS = {
   CANCELLED: "CANCELLED",       // admin/manual close
 };
 
+export const TASK_DIFFICULTY = {
+  EASY: "EASY",
+  MEDIUM: "MEDIUM",
+  HARD: "HARD"
+};
+
 
 export const ROUTES = {
   HOME: "/",

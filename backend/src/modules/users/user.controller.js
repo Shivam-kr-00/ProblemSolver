@@ -1,4 +1,4 @@
-import { getMyProfileService, getLeaderboardService, getAllUsersService, updateMyProfileService, getMyTasksService, getMyContributionsService, getUserByIdService, deactivateUserService, changeUserRoleService } from "./user.service";
+import { getMyProfileService, getLeaderboardService, getAllUsersService, updateMyProfileService, getMyTasksService, getMyContributionsService, getUserByIdService, deactivateUserService, changeUserRoleService } from "./user.service.js";
 import ApiResponse from "../../utils/apiResponse.js";
 
 
