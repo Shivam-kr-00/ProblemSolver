@@ -1,4 +1,4 @@
-import { createProblemService, getAllProblemsService, getProblemByIdService, updateProblemStatusService, addRepoToProblemService } from "./problem.service.js";
+import { createProblemService, getAllProblemsService, getProblemByIdService, updateProblemStatusService, addRepoToProblemService, updateProblemService } from "./problem.service.js";
 import ApiResponse from "../../utils/apiResponse.js";
 
 
@@ -77,3 +77,20 @@ export const addRepoToProblem = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updateProblem = async (req, res, next) => {
+  try {
+    const { problemId } = req.params;
+    const userId = req.user.id;
+    const problemData = req.body;
+
+    const problem = await updateProblemService(problemId, userId, problemData);
+
+    res.status(200).json(
+      new ApiResponse(200, problem, "Problem updated successfully")
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+

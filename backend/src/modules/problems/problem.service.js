@@ -4,11 +4,21 @@ import User from '../auth/auth.model.js';
 import Task from '../tasks/task.model.js';
 import { PROBLEM_STATUS, TASK_STATUS, ROLES } from '../../constants.js';
 import apiError from '../../utils/apiError.js';
+import { createGithubRepository } from "../../utils/github.js";
 
 export const createProblemService = async (problemData, userId) => {
 
+    // 1. Create a safe, unique GitHub repository name
+    const safeTitle = problemData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const repoName = `problem-${safeTitle}-${Date.now().toString().slice(-4)}`;
+
+    // 2. Call GitHub API to create repository
+    const repoUrl = await createGithubRepository(repoName, problemData.description);
+
+    // 3. Save Problem to Database with the repository URL
     const problem = await Problem.create({
         ...problemData,
+        repositoryUrl: repoUrl,
         createdBy: userId
     });
     return problem;
@@ -177,3 +187,33 @@ export const addRepoToProblemService = async (problemId, repoUrl) => {
     await problem.save();
     return problem;
 };
+
+export const updateProblemService = async (problemId, userId, updateData) => {
+    if (!mongoose.Types.ObjectId.isValid(problemId)) {
+        throw new apiError("Invalid problem ID", 400);
+    }
+
+    const problem = await Problem.findById(problemId);
+    if (!problem) {
+        throw new apiError("Problem not found", 404);
+    }
+
+    // Admins usually bypass this but just in case we verify ownership or role later
+    // For now, we update the simple fields
+    const allowedUpdates = ['title', 'description', 'category', 'region', 'tags'];
+
+    allowedUpdates.forEach(field => {
+        if (updateData[field] !== undefined) {
+            // Handle tags specifically if it comes as comma separated string instead of array
+            if (field === 'tags' && typeof updateData.tags === 'string') {
+                problem.tags = updateData.tags.split(',').map(tag => tag.trim()).filter(t => t);
+            } else {
+                problem[field] = updateData[field];
+            }
+        }
+    });
+
+    await problem.save();
+    return problem;
+};
+

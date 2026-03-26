@@ -1,61 +1,71 @@
 import mongoose from 'mongoose';
-import { TASK_STATUS } from '../../constants.js';
+import { TASK_STATUS, TASK_DIFFICULTY } from '../../constants.js';
 
 const taskSchema = new mongoose.Schema({
 
-    problemId:{
+    problemId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Problem',
         required: true,
-        index:true
+        index: true
     },
-    title:{
+    title: {
         type: String,
-        required:true,
-        trim:true,
-        maxlength:120,
-        minlength:5
+        required: true,
+        trim: true,
+        maxlength: 120,
+        minlength: 5
     },
-    description:{
+    description: {
         type: String,
-        required:true,
-        minlength:20
+        required: true,
+        minlength: 20
     },
-    status:{
-        type:String,
+    difficulty: {
+        type: String,
+        enum: Object.values(TASK_DIFFICULTY),
+        default: TASK_DIFFICULTY.MEDIUM,
+        index: true
+    },
+    status: {
+        type: String,
         enum: Object.values(TASK_STATUS),
         default: TASK_STATUS.OPEN,
-        index:true
+        index: true
 
     },
-    assignedTo:{
+    assignedTo: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        default:null
+        default: null
     },
-    repositoryUrl:{
+    repositoryUrl: {
         type: String,
-        default:""
+        default: ""
     },
-    githubIssueUrl:{
+    githubIssueUrl: {
         type: String,
-        default:""
+        default: ""
     },
-    branchName:{
+    githubPRUrl: {
         type: String,
-        default:""
+        default: ""
     },
-    createdBy:{
+    branchName: {
+        type: String,
+        default: ""
+    },
+    createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required:true
+        required: true
 
     }
 
 },
-{
-    timestamps:true
-})
+    {
+        timestamps: true
+    })
 
 const Task = mongoose.model('Task', taskSchema);
 

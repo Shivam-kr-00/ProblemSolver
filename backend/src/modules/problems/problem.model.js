@@ -24,7 +24,7 @@ const problemSchema = new mongoose.Schema({
 
     region: {
         type: String,
-        required: true,
+        default: 'Global',
         index: true
     },
 
@@ -35,13 +35,11 @@ const problemSchema = new mongoose.Schema({
         default: []
     },
 
-    // githubRepoUrl: {
-    //     type: String,
-    //     trim: true,
-    //     default: null, 
-    //     unique: true,
-    //     sparse: true
-    // },
+    repositoryUrl: {
+        type: String,
+        trim: true,
+        default: "",
+    },
 
     status: {
         type: String,

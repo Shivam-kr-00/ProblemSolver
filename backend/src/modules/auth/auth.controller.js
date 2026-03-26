@@ -1,4 +1,4 @@
-import { generateToken, storeRefreshToken, setCookies } from "./auth.service.js";
+import { generateToken, storeRefreshToken, setCookies,refreshTokenService } from "./auth.service.js";
 import User from "./auth.model.js";
 import jwt from 'jsonwebtoken';
 import { redisClient } from '../../config/redis.js';
@@ -151,3 +151,30 @@ export const refreshAccessToken = async (req, res, next) => {
         next(error);
     }
 };
+
+export const refreshTokenController = async (req, res, next) => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+
+        const { accessToken, refreshToken: newRefreshToken } =
+            await refreshTokenService(refreshToken);
+
+        setCookies(res, accessToken, newRefreshToken);
+
+        return res.status(200).json({
+            success: true,
+            message: "Token refreshed successfully"
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getprofile = async(req,res,next)=>{
+    try {
+        res.json(req.user);
+    } catch (error) {
+        next(error);
+    }
+}

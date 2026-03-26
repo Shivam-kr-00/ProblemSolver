@@ -6,14 +6,16 @@ import {
   getProblemById,
   getAllProblems,
   updateProblemStatus,
-  addRepoToProblem
+  addRepoToProblem,
+  updateProblem
 } from './problem.controller.js';
 
 const router = express.Router();
-router.post("/", protectRoute, isAdmin, createProblem);
+router.post("/", protectRoute, createProblem);
 router.get("/", getAllProblems);
 router.get("/:problemId", getProblemById);
 router.patch("/:problemId/status", protectRoute, updateProblemStatus);
 router.patch("/:problemId/repository", protectRoute, isAdmin, addRepoToProblem);
+router.patch("/:problemId", protectRoute, isAdmin, updateProblem);
 
 export default router;
