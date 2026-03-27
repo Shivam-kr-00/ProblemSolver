@@ -6,6 +6,7 @@ import errorMiddleware from "./middlewares/error.middleware.js";
 
 
 const app = express();
+app.set("trust proxy", 1);
 
 app.use(cors({
     origin: function (origin, callback) {
