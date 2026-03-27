@@ -1,10 +1,10 @@
-import { generateToken, storeRefreshToken, setCookies,refreshTokenService } from "./auth.service.js";
+import { generateToken, storeRefreshToken, setCookies, refreshTokenService } from "./auth.service.js";
 import User from "./auth.model.js";
 import jwt from 'jsonwebtoken';
 import { redisClient } from '../../config/redis.js';
 import { env } from '../../config/env.js';
 import ApiResponse from "../../utils/apiResponse.js";
-import logger from "../../utils/logger.js"; 
+import logger from "../../utils/logger.js";
 
 export const signup = async (req, res, next) => {
     try {
@@ -22,9 +22,9 @@ export const signup = async (req, res, next) => {
             error.statusCode = 400;
             throw error;
         }
- 
+
         const user = await User.create({ name, email, password });
-        
+
         logger.info(`User created successfully: ${user.email}`);
 
         const { accessToken, refreshToken } = generateToken(user._id);
@@ -39,7 +39,8 @@ export const signup = async (req, res, next) => {
             }, "User created successfully")
         );
     } catch (err) {
-         next(err);
+        logger.error(`Signup error: ${err.message}`);
+        next(err);
     }
 };
 
@@ -76,6 +77,7 @@ export const login = async (req, res, next) => {
             throw error;
         }
     } catch (error) {
+        logger.error(`Login error: ${error.message}`);
         next(error);
     }
 };
@@ -96,7 +98,7 @@ export const logout = async (req, res, next) => {
 
         res.clearCookie('accessToken');
         res.clearCookie('refreshToken');
-        
+
         res.status(200).json(
             new ApiResponse(200, null, "Logged out successfully")
         );
@@ -122,7 +124,7 @@ export const refreshAccessToken = async (req, res, next) => {
             const message = err.name === 'TokenExpiredError' ? "Refresh token expired" : "Invalid refresh token";
             const error = new Error(message);
             error.statusCode = 401;
-            throw error; 
+            throw error;
         }
 
         const storedRefreshToken = await redisClient.get(decoded.userId.toString());
@@ -130,7 +132,7 @@ export const refreshAccessToken = async (req, res, next) => {
         if (storedRefreshToken !== refreshTokenFromCookie) {
             const error = new Error(`Session Mismatch: Potential token reuse for user ${decoded.userId}`);
             error.statusCode = 401;
-            throw error; 
+            throw error;
         }
 
         const accessToken = jwt.sign({ userId: decoded.userId }, env.accessSecret, { expiresIn: '15m' });
@@ -171,7 +173,7 @@ export const refreshTokenController = async (req, res, next) => {
     }
 };
 
-export const getprofile = async(req,res,next)=>{
+export const getprofile = async (req, res, next) => {
     try {
         res.json(req.user);
     } catch (error) {
