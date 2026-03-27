@@ -8,12 +8,22 @@ import errorMiddleware from "./middlewares/error.middleware.js";
 const app = express();
 
 app.use(cors({
-    origin: [
-        process.env.FRONTEND_URL,
-        "https://problem-solver-nu.vercel.app",
-        "http://localhost:5173"
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            process.env.FRONTEND_URL,
+            "https://problem-solver-nu.vercel.app",
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "http://localhost:5175",
+        ].filter(Boolean);
 
-    ].filter(Boolean),
+        // Allow all Vercel preview deployments (*.vercel.app)
+        if (!origin || allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('CORS not allowed'));
+        }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
