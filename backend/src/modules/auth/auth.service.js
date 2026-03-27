@@ -49,16 +49,16 @@ export const setCookies = (res, accessToken, refreshToken) => {
     //set access token in cookie
     res.cookie('accessToken', accessToken, {
         httpOnly: true, // prvent client side js access
-        secure: env.nodeEnv === 'production', // only send over https
-        sameSite: env.nodeEnv === 'production' ? 'none' : 'strict', // prevent csrf
+        secure: true, // only send over https
+        sameSite: 'none', // prevent csrf
         maxAge: 15 * 60 * 1000,
     });
 
     //set refresh token in cookie
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true, // prvent client side js access
-        secure: env.nodeEnv === 'production', // only send over https
-        sameSite: env.nodeEnv === 'production' ? 'none' : 'strict', // prevent csrf
+        secure: true, // only send over https
+        sameSite: 'none', // prevent csrf
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 }

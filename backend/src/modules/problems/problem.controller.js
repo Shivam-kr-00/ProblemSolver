@@ -2,6 +2,8 @@ import { createProblemService, getAllProblemsService, getProblemByIdService, upd
 import ApiResponse from "../../utils/apiResponse.js";
 
 
+import ApiError from "../../utils/apiError.js";
+
 export const createProblem = async (req, res, next) => {
   try {
     const userId = req.user._id;
@@ -22,9 +24,7 @@ export const getProblemById = async (req, res, next) => {
     const { problemId } = req.params;
     const problem = await getProblemByIdService(problemId);
     if (!problem) {
-      const error = new Error("Problem not found");
-      error.statusCode = 404;
-      throw error;
+      throw new ApiError("Problem not found", 404);
     }
 
     res.status(200).json(new ApiResponse(
