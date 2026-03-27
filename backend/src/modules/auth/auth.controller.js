@@ -5,22 +5,19 @@ import { redisClient } from '../../config/redis.js';
 import { env } from '../../config/env.js';
 import ApiResponse from "../../utils/apiResponse.js";
 import logger from "../../utils/logger.js";
+import ApiError from "../../utils/apiError.js";
 
 export const signup = async (req, res, next) => {
     try {
         const { name, email, password } = req.body || {};
 
         if (!name || !email || !password) {
-            const error = new Error("Name, email, and password are required");
-            error.statusCode = 400;
-            throw error;
+            throw new ApiError("Name, email, and password are required", 400);
         }
 
         const userExist = await User.findOne({ email });
         if (userExist) {
-            const error = new Error("User already exists");
-            error.statusCode = 400;
-            throw error;
+            throw new ApiError("User already exists", 400);
         }
 
         const user = await User.create({ name, email, password });
@@ -49,9 +46,7 @@ export const login = async (req, res, next) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            const error = new Error("Email and Password are required");
-            error.statusCode = 400;
-            throw error;
+            throw new ApiError("Email and Password are required", 400);
         }
 
         const user = await User.findOne({ email }).select("+password");
@@ -72,9 +67,7 @@ export const login = async (req, res, next) => {
                 }, "Login successful")
             );
         } else {
-            const error = new Error("Invalid email or password");
-            error.statusCode = 401;
-            throw error;
+            throw new ApiError("Invalid email or password", 401);
         }
     } catch (error) {
         logger.error(`Login error: ${error.message}`);
@@ -112,9 +105,7 @@ export const refreshAccessToken = async (req, res, next) => {
         const refreshTokenFromCookie = req.cookies.refreshToken;
 
         if (!refreshTokenFromCookie) {
-            const error = new Error("No refresh token found");
-            error.statusCode = 401;
-            throw error;
+            throw new ApiError("No refresh token found", 401);
         }
 
         let decoded;
@@ -122,17 +113,13 @@ export const refreshAccessToken = async (req, res, next) => {
             decoded = jwt.verify(refreshTokenFromCookie, env.refreshSecret);
         } catch (err) {
             const message = err.name === 'TokenExpiredError' ? "Refresh token expired" : "Invalid refresh token";
-            const error = new Error(message);
-            error.statusCode = 401;
-            throw error;
+            throw new ApiError(message, 401);
         }
 
         const storedRefreshToken = await redisClient.get(decoded.userId.toString());
 
         if (storedRefreshToken !== refreshTokenFromCookie) {
-            const error = new Error(`Session Mismatch: Potential token reuse for user ${decoded.userId}`);
-            error.statusCode = 401;
-            throw error;
+            throw new ApiError(`Session Mismatch: Potential token reuse for user ${decoded.userId}`, 401);
         }
 
         const accessToken = jwt.sign({ userId: decoded.userId }, env.accessSecret, { expiresIn: '15m' });
@@ -140,7 +127,7 @@ export const refreshAccessToken = async (req, res, next) => {
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
             secure: env.nodeEnv === 'production',
-            sameSite: 'strict',
+            sameSite: env.nodeEnv === 'production' ? 'none' : 'strict',
             maxAge: 15 * 60 * 1000,
         });
 

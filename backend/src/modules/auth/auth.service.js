@@ -50,7 +50,7 @@ export const setCookies = (res, accessToken, refreshToken) => {
     res.cookie('accessToken', accessToken, {
         httpOnly: true, // prvent client side js access
         secure: env.nodeEnv === 'production', // only send over https
-        sameSite: 'strict', // prevent csrf
+        sameSite: env.nodeEnv === 'production' ? 'none' : 'strict', // prevent csrf
         maxAge: 15 * 60 * 1000,
     });
 
@@ -58,7 +58,7 @@ export const setCookies = (res, accessToken, refreshToken) => {
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true, // prvent client side js access
         secure: env.nodeEnv === 'production', // only send over https
-        sameSite: 'strict', // prevent csrf
+        sameSite: env.nodeEnv === 'production' ? 'none' : 'strict', // prevent csrf
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 }
