@@ -4,7 +4,7 @@ import ApiResponse from "../../utils/apiResponse.js";
 
 export const createProblem = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const problemData = req.body;
 
     const problem = await createProblemService(problemData, userId);

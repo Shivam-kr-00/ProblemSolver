@@ -4,7 +4,7 @@ import ApiResponse from "../../utils/apiResponse.js";
 
 export const getMyProfile = async (req, res, next) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user._id;
         const user = await getMyProfileService(userId);
         res.status(200).json(new ApiResponse(
             200, user, "User profile fetched successfully"
@@ -16,7 +16,7 @@ export const getMyProfile = async (req, res, next) => {
 
 export const updateMyProfile = async (req, res, next) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user._id;
         const updatedData = req.body;
         const updatedUser = await updateMyProfileService(userId, updatedData);
         res.status(200).json(new ApiResponse(
@@ -30,7 +30,7 @@ export const updateMyProfile = async (req, res, next) => {
 
 export const getMyTasks = async (req, res, next) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user._id;
         const tasks = await getMyTasksService(userId);
         res.status(200).json(new ApiResponse(
             200, tasks, "User tasks fetched successfully"
@@ -42,7 +42,7 @@ export const getMyTasks = async (req, res, next) => {
 
 export const getMyContributions = async (req, res, next) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user._id;
         const contributions = await getMyContributionsService(userId);
         res.status(200).json(new ApiResponse(
             200, contributions, "User contributions fetched successfully"

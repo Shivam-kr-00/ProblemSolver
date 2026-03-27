@@ -27,7 +27,7 @@ export const getTaskById = async (req, res, next) => {
 export const createTask = async (req, res, next) => {
     try {
         const { problemId, title, description, difficulty } = req.body;
-        const createdBy = req.user.id;
+        const createdBy = req.user._id;
         const task = await createTaskService(problemId, title, description, difficulty, createdBy);
         res.status(201).json(new ApiResponse(
             201, task, "Task created successfully"
