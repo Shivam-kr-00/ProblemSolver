@@ -4,6 +4,7 @@ import problemRoutes from './modules/problems/problem.routes.js';
 import taskRoutes from './modules/tasks/task.routes.js';
 import userRoutes from './modules/users/user.routes.js';
 import githubWebhookRoutes from './modules/webhooks/github/github.route.js';
+import messageRoutes from './modules/message/message.route.js';
 const router = express.Router();
 
 
@@ -12,5 +13,6 @@ router.use('/problems', problemRoutes);
 router.use('/tasks', taskRoutes);
 router.use('/users', userRoutes);
 router.use('/webhooks/github', githubWebhookRoutes);
+router.use('/messages', messageRoutes);
 
 export default router;

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import * as authApi from '../api/auth.api.js';
 import { toast } from 'react-hot-toast';
+import { socket } from '../lib/socket.js';
 
 export const useAuthStore = create((set) => ({
     user: null,
@@ -56,6 +57,7 @@ export const useAuthStore = create((set) => ({
             const userData = profileRes.data.data || profileRes.data || profileRes;
 
             set({ user: userData, loading: false });
+            socket.connect();
             toast.success("Login successful");
         } catch (error) {
             set({ loading: false });
@@ -70,6 +72,7 @@ export const useAuthStore = create((set) => ({
         try {
             await authApi.logout();
             set({ user: null, loading: false });
+            socket.disconnect();
             toast.success("Logged out");
         } catch (error) {
             set({ loading: false });
@@ -84,6 +87,7 @@ export const useAuthStore = create((set) => ({
             // Handle response - getProfile returns user directly
             const userData = res.data.data || res.data || res;
             set({ checkingAuth: false, user: userData });
+            socket.connect();
         } catch (error) {
             set({ checkingAuth: false, user: null });
         }

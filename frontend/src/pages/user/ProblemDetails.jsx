@@ -9,6 +9,7 @@ import TaskCard from "../../components/task/TaskCard.jsx";
 import TaskForm from "../../components/task/TaskForm.jsx";
 import ContributionGuide from "../../components/task/ContributionGuide.jsx";
 import EmptyState from "../../components/common/EmptyState.jsx";
+import ChatBox from "../../components/chat/ChatBox.jsx";
 import {
   ArrowLeft,
   Users,
@@ -18,6 +19,7 @@ import {
   CheckCircle,
   Edit,
   Badge,
+  MessageSquare,
 } from "lucide-react";
 
 const ProblemDetails = () => {
@@ -64,7 +66,7 @@ const ProblemDetails = () => {
     );
   }
 
-  const isOwner = currentProblem?.createdBy?._id === user?.id;
+  const isOwner = currentProblem?.createdBy?._id === user?._id;
   const canCreateTask = isOwner || user?.role === "ADMIN";
 
   // Check if user has an assigned task in this problem
@@ -74,11 +76,14 @@ const ProblemDetails = () => {
       (task.assignedTo._id === user?._id || task.assignedTo === user?._id),
   );
 
+  // Chat is accessible to: assigned contributors, problem owner, and admins
+  const canAccessChat = !!userAssignedTask || isOwner || user?.role === "ADMIN";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900">
       <Navbar />
 
-      <div className="max-w-5xl mx-auto px-6 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -87,7 +92,7 @@ const ProblemDetails = () => {
           {/* Header */}
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 transition"
+            className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 transition py-2 px-1 -ml-1"
           >
             <ArrowLeft className="w-5 h-5" />
             Back to Marketplace
@@ -144,7 +149,7 @@ const ProblemDetails = () => {
             </div>
 
             {/* Metadata */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-6 border-t border-slate-700/50">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-slate-700/50">
               <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50 text-center">
                 <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">
                   Created By
@@ -295,6 +300,24 @@ const ProblemDetails = () => {
               )}
             </div>
           </div>
+
+          {/* Chat Section */}
+          {canAccessChat ? (
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                <MessageSquare className="w-6 h-6 text-emerald-400" />
+                Collaborator Chat
+              </h2>
+              <ChatBox problemId={problemId} />
+            </div>
+          ) : (
+            <div className="bg-slate-800/30 border border-slate-700/40 rounded-xl p-6 text-center">
+              <MessageSquare className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+              <p className="text-slate-500 text-sm">
+                Chat is available to collaborators with an assigned task.
+              </p>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/useAuthStore.js";
 import { motion } from "framer-motion";
-import { Menu, X, LogOut, Settings, Bell, User } from "lucide-react";
+import { Menu, X, LogOut, Settings, Bell, User, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 
 const Navbar = () => {
@@ -24,17 +24,28 @@ const Navbar = () => {
   return (
     <nav className="bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 border-b border-emerald-500/20 sticky top-0 z-40 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <button
-          onClick={handleLogoClick}
-          className="flex items-center gap-3 group hover:opacity-80 transition"
-        >
-          <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg flex items-center justify-center group-hover:shadow-lg group-hover:shadow-emerald-500/50 transition">
-            <span className="text-white font-bold text-lg">PF</span>
-          </div>
-          <span className="text-white font-bold text-xl hidden sm:inline">
-            problem solver
-          </span>
-        </button>
+        <div className="flex items-center gap-2 sm:gap-3">
+          {!["/", "/dashboard", "/admin", "/login", "/signup"].includes(location.pathname) && (
+            <button
+              onClick={() => navigate(-1)}
+              className="md:hidden p-2 -ml-2 text-emerald-300 hover:bg-emerald-500/10 rounded-lg transition-colors flex items-center justify-center"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+          )}
+          <button
+            onClick={handleLogoClick}
+            className="flex items-center gap-2 sm:gap-3 group hover:opacity-80 transition"
+          >
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg flex items-center justify-center group-hover:shadow-lg group-hover:shadow-emerald-500/50 transition">
+              <span className="text-white font-bold text-base sm:text-lg">PF</span>
+            </div>
+            <span className="text-white font-bold text-xl hidden sm:inline">
+              problem solver
+            </span>
+          </button>
+        </div>
 
         <div className="hidden md:flex items-center gap-8">
           {user?.role === "ADMIN" && (
@@ -169,25 +180,29 @@ const Navbar = () => {
               <>
                 <Link
                   to="/admin"
-                  className="block text-emerald-100 hover:text-emerald-400 transition"
+                  className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   Admin Dashboard
                 </Link>
                 <Link
                   to="/admin/problems"
-                  className="block text-emerald-100 hover:text-emerald-400 transition"
+                  className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   Manage Problems
                 </Link>
                 <Link
                   to="/admin/tasks"
-                  className="block text-emerald-100 hover:text-emerald-400 transition"
+                  className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   Manage Tasks
                 </Link>
                 <Link
                   to="/admin/users"
-                  className="block text-emerald-100 hover:text-emerald-400 transition"
+                  className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   Manage Users
                 </Link>
@@ -195,25 +210,28 @@ const Navbar = () => {
             )}
             <Link
               to="/dashboard"
-              className="block text-emerald-100 hover:text-emerald-400 transition"
+              className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+              onClick={() => setMobileMenuOpen(false)}
             >
               Dashboard
             </Link>
             <Link
               to="/problems"
-              className="block text-emerald-100 hover:text-emerald-400 transition"
+              className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+              onClick={() => setMobileMenuOpen(false)}
             >
               Problems
             </Link>
             <Link
               to="/profile"
-              className="block text-emerald-100 hover:text-emerald-400 transition"
+              className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+              onClick={() => setMobileMenuOpen(false)}
             >
               Profile
             </Link>
             <button
               onClick={handleLogout}
-              className="w-full text-left text-red-400 hover:text-red-300 transition flex items-center gap-2 mt-4"
+              className="w-full text-left py-2 text-red-400 hover:text-red-300 transition flex items-center gap-2 mt-2 border-t border-slate-700/50 pt-4"
             >
               <LogOut className="w-4 h-4" />
               Logout

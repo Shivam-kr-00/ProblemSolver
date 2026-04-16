@@ -3,9 +3,8 @@ import cors from "cors";
 import mainRouter from "./routes.js";
 import cookieParser from "cookie-parser";
 import errorMiddleware from "./middlewares/error.middleware.js";
+import { app } from "./config/socket.js";
 
-
-const app = express();
 app.set("trust proxy", 1);
 
 app.use(cors({

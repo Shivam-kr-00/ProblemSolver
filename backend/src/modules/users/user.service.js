@@ -120,6 +120,7 @@ export const deactivateUserService = async (userId) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new apiError("Invalid user ID", 400);
     }
+
     const user = await User.findByIdAndUpdate(
         userId,
         { isActive: false },
@@ -128,6 +129,21 @@ export const deactivateUserService = async (userId) => {
     if (!user) {
         throw new apiError("User not found", 404);
     }
+
+    // Reset all non-completed tasks assigned to this user back to OPEN
+    // so other users can claim them again
+    const incompleteStatuses = [
+        TASK_STATUS.ASSIGNED,
+        TASK_STATUS.IN_PROGRESS,
+        TASK_STATUS.IN_REVIEW,
+        TASK_STATUS.REOPENED,
+    ];
+
+    await Task.updateMany(
+        { assignedTo: userId, status: { $in: incompleteStatuses } },
+        { $set: { status: TASK_STATUS.OPEN, assignedTo: null } }
+    );
+
     return user;
 };
 
