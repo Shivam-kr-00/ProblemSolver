@@ -11,4 +11,7 @@ export const env = {
     accessSecret: process.env.ACCESS_TOKEN_SECRET,
     refreshSecret: process.env.REFRESH_TOKEN_SECRET,
     frontendUrl: process.env.FRONTEND_URL,
+    cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
+    cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
 };

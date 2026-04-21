@@ -6,6 +6,7 @@ import { env } from '../../config/env.js';
 import ApiResponse from "../../utils/apiResponse.js";
 import logger from "../../utils/logger.js";
 import ApiError from "../../utils/apiError.js";
+import cloudinary from "../../config/cloudinary.js";
 
 export const signup = async (req, res, next) => {
     try {
@@ -166,4 +167,5 @@ export const getprofile = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-}
+};
+

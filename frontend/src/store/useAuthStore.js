@@ -7,6 +7,7 @@ export const useAuthStore = create((set) => ({
     user: null,
     loading: false,
     checkingAuth: true,
+ 
 
     signup: async ({ name, email, password, confirmPassword }) => {
         set({ loading: true });
@@ -91,7 +92,8 @@ export const useAuthStore = create((set) => ({
         } catch (error) {
             set({ checkingAuth: false, user: null });
         }
-    }
+    },
+
 
 
 }));
