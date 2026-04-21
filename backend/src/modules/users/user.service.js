@@ -15,6 +15,8 @@ export const getMyProfileService = async (userId) => {
     return user;
 };
 
+import cloudinary from "../../config/cloudinary.js";
+
 export const updateMyProfileService = async (userId, updateData) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new apiError("Invalid user ID", 400);
@@ -23,6 +25,19 @@ export const updateMyProfileService = async (userId, updateData) => {
     if (!user) {
         throw new apiError("User not found", 404);
     }
+    
+    // If a base64 image string is provided, upload it to Cloudinary first
+    if (updateData.profileImageUrl && updateData.profileImageUrl.startsWith("data:image")) {
+        try {
+            const uploadResponse = await cloudinary.uploader.upload(updateData.profileImageUrl, {
+                folder: "problem_finder_profiles"
+            });
+            updateData.profileImageUrl = uploadResponse.secure_url;
+        } catch (error) {
+            throw new apiError("Failed to upload image to Cloudinary", 500);
+        }
+    }
+
     // Allowed fields only
     const allowedFields = ["name", "profileImageUrl", "bio", "githubUsername"];
 

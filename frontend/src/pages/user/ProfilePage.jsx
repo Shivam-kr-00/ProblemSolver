@@ -23,11 +23,11 @@ const ProfilePage = () => {
   const [formData, setFormData] = useState({
     name: userProfile?.name || "",
     bio: userProfile?.bio || "",
-    githubUrl: userProfile?.githubUrl || "",
-    profileImage: userProfile?.profileImage || "",
+    githubUsername: userProfile?.githubUsername || "",
+    profileImageUrl: userProfile?.profileImageUrl || "",
   });
   const [imagePreview, setImagePreview] = useState(
-    userProfile?.profileImage || "",
+    userProfile?.profileImageUrl || "",
   );
 
   useEffect(() => {
@@ -39,10 +39,10 @@ const ProfilePage = () => {
       setFormData({
         name: userProfile.name || "",
         bio: userProfile.bio || "",
-        githubUrl: userProfile.githubUrl || "",
-        profileImage: userProfile.profileImage || "",
+        githubUsername: userProfile.githubUsername || "",
+        profileImageUrl: userProfile.profileImageUrl || "",
       });
-      setImagePreview(userProfile.profileImage || "");
+      setImagePreview(userProfile.profileImageUrl || "");
     }
   }, [userProfile]);
 
@@ -52,7 +52,7 @@ const ProfilePage = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
-        setFormData({ ...formData, profileImage: reader.result });
+        setFormData({ ...formData, profileImageUrl: reader.result });
       };
       reader.readAsDataURL(file);
     }
@@ -114,15 +114,15 @@ const ProfilePage = () => {
                   <Mail className="w-4 h-4" />
                   {userProfile?.email}
                 </p>
-                {userProfile?.githubUrl && (
+                {userProfile?.githubUsername && (
                   <a
-                    href={userProfile.githubUrl}
+                    href={`https://github.com/${userProfile.githubUsername.replace("https://github.com/", "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-emerald-400 hover:text-emerald-300 flex items-center gap-2 mt-1 text-sm"
                   >
                     <Github className="w-4 h-4" />
-                    {userProfile.githubUrl}
+                    {userProfile.githubUsername.replace("https://github.com/", "")}
                   </a>
                 )}
               </div>
@@ -164,33 +164,20 @@ const ProfilePage = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-emerald-100 mb-2">
-                    GitHub Profile URL
+                    GitHub Username
                   </label>
                   <div className="flex items-center gap-2">
                     <Github className="w-5 h-5 text-emerald-400" />
                     <input
-                      type="url"
-                      value={formData.githubUrl}
+                      type="text"
+                      value={formData.githubUsername}
                       onChange={(e) =>
-                        setFormData({ ...formData, githubUrl: e.target.value })
+                        setFormData({ ...formData, githubUsername: e.target.value })
                       }
-                      placeholder="https://github.com/yourusername"
+                      placeholder="yourusername"
                       className="flex-1 px-4 py-2 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-lg text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 transition"
                     />
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-emerald-100 mb-2">
-                    Bio
-                  </label>
-                  <textarea
-                    value={formData.bio}
-                    onChange={(e) =>
-                      setFormData({ ...formData, bio: e.target.value })
-                    }
-                    rows="4"
-                    className="w-full px-4 py-2 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-lg text-white focus:outline-none focus:border-emerald-400 transition resize-none"
-                  />
                 </div>
                 <div className="flex gap-3 pt-4">
                   <button

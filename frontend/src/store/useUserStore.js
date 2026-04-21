@@ -9,6 +9,7 @@ export const useUserStore = create((set) => ({
     leaderboard: [],
     loading: false,
     error: null,
+    isUpdatingProfile: false,
 
     getMyProfile: async () => {
         set({ loading: true, error: null });
