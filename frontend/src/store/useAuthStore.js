@@ -23,19 +23,36 @@ export const useAuthStore = create((set) => ({
         }
 
         try {
-            // First, perform signup to get tokens in cookies
+            // First, perform signup to get OTP sent
             await authApi.signup({ name, email, password });
-
-            // Then fetch the complete user profile
-            const profileRes = await authApi.getProfile();
-            const userData = profileRes.data.data || profileRes.data || profileRes;
-
-            set({ user: userData, loading: false });
-            toast.success("Signup successful");
+            
+            set({ loading: false });
+            toast.success("OTP sent to your email!");
+            return true; // Indicate success to go to step 2
         } catch (error) {
             set({ loading: false });
             console.error("Signup error:", error);
             toast.error(error.response?.data?.message || "Signup failed");
+            return false;
+        }
+    },
+
+    verifyEmail: async ({ email, otp }) => {
+        set({ loading: true });
+        try {
+            await authApi.verifyEmail({ email, otp });
+            
+            const profileRes = await authApi.getProfile();
+            const userData = profileRes.data.data || profileRes.data || profileRes;
+
+            set({ user: userData, loading: false });
+            socket.connect();
+            toast.success("Email verified successfully! You are now logged in.");
+            return true;
+        } catch (error) {
+            set({ loading: false });
+            toast.error(error.response?.data?.message || "Verification failed");
+            return false;
         }
     },
 
@@ -48,22 +65,37 @@ export const useAuthStore = create((set) => ({
         }
 
         try {
-            // First, perform login to get tokens in cookies
-            const loginRes = await authApi.login({ email, password });
+            // First, perform login to get OTP sent
+            await authApi.login({ email, password });
 
-            // Then fetch the complete user profile
-            const profileRes = await authApi.getProfile();
-
-            // Handle the user data - getProfile returns user directly, not wrapped in data.data
-            const userData = profileRes.data.data || profileRes.data || profileRes;
-
-            set({ user: userData, loading: false });
-            socket.connect();
-            toast.success("Login successful");
+            set({ loading: false });
+            toast.success("OTP sent to your email!");
+            return true; // Indicate success to go to step 2
         } catch (error) {
             set({ loading: false });
             console.error("Login error:", error);
             toast.error(error.response?.data?.message || "Login failed");
+            return false;
+        }
+    },
+
+    verifyLoginOtp: async ({ email, otp }) => {
+        set({ loading: true });
+        try {
+            await authApi.verifyLoginOtp({ email, otp });
+
+            // After OTP is verified, backend sets cookies. Now fetch profile.
+            const profileRes = await authApi.getProfile();
+            const userData = profileRes.data.data || profileRes.data || profileRes;
+
+            set({ user: userData, loading: false });
+            socket.connect();
+            toast.success("Login successful!");
+            return true;
+        } catch (error) {
+            set({ loading: false });
+            toast.error(error.response?.data?.message || "OTP verification failed");
+            return false;
         }
     },
 
