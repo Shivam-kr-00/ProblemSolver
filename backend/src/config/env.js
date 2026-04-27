@@ -11,7 +11,15 @@ export const env = {
     accessSecret: process.env.ACCESS_TOKEN_SECRET,
     refreshSecret: process.env.REFRESH_TOKEN_SECRET,
     frontendUrl: process.env.FRONTEND_URL,
+
+    //cloudinary configuration
     cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
     cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
     cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
+
+    //nodemailer configuration
+    clientId: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+    emailUser: process.env.EMAIL_USER,
+    refreshToken: process.env.REFRESH_TOKEN
 };

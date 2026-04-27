@@ -6,8 +6,10 @@ import { Mail, Lock, ArrowRight, Loader } from "lucide-react";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [step, setStep] = useState(1);
+  const [otp, setOtp] = useState("");
   const [errors, setErrors] = useState({});
-  const { login, loading, user } = useAuthStore();
+  const { login, verifyLoginOtp, loading, user } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,14 +35,28 @@ const LoginPage = () => {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newErrors = validateForm();
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
+    if (step === 1) {
+      const newErrors = validateForm();
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+      }
+      const success = await login(formData);
+      if (success) {
+        setStep(2);
+      }
+    } else {
+      if (!otp || otp.length < 6) {
+        setErrors({ otp: "Please enter a valid 6-digit OTP" });
+        return;
+      }
+      const success = await verifyLoginOtp({ email: formData.email, otp });
+      if (success) {
+        navigate("/");
+      }
     }
-    login(formData);
   };
 
   const containerVariants = {
@@ -85,86 +101,127 @@ const LoginPage = () => {
             onSubmit={handleSubmit}
             className="mt-10 space-y-6"
           >
-            {/* Email Field */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-semibold text-emerald-100 mb-3"
-              >
-                Email Address
-              </label>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
-                />
-              </div>
-              {errors.email && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-400 text-sm mt-2"
-                >
-                  {errors.email}
-                </motion.p>
-              )}
-            </div>
+            {step === 1 ? (
+              <>
+                {/* Email Field */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-semibold text-emerald-100 mb-3"
+                  >
+                    Email Address
+                  </label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
+                    />
+                  </div>
+                  {errors.email && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-400 text-sm mt-2"
+                    >
+                      {errors.email}
+                    </motion.p>
+                  )}
+                </div>
 
-            {/* Password Field */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-semibold text-emerald-100 mb-3"
-              >
-                Password
-              </label>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
-                />
-              </div>
-              {errors.password && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-400 text-sm mt-2"
-                >
-                  {errors.password}
-                </motion.p>
-              )}
-            </div>
+                {/* Password Field */}
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-semibold text-emerald-100 mb-3"
+                  >
+                    Password
+                  </label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
+                    />
+                  </div>
+                  {errors.password && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-400 text-sm mt-2"
+                    >
+                      {errors.password}
+                    </motion.p>
+                  )}
+                </div>
 
-            {/* Remember & Forgot */}
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center cursor-pointer group">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded bg-white/10 border border-emerald-400/30 checked:bg-emerald-500 checked:border-emerald-500 focus:ring-2 focus:ring-emerald-400/20 cursor-pointer"
-                />
-                <span className="ml-2 text-emerald-100 group-hover:text-emerald-50 transition">
-                  Remember me
-                </span>
-              </label>
-              <a
-                href="#"
-                className="text-emerald-400 hover:text-emerald-300 transition"
-              >
-                Forgot password?
-              </a>
-            </div>
+                {/* Remember & Forgot */}
+                <div className="flex items-center justify-between text-sm">
+                  <label className="flex items-center cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded bg-white/10 border border-emerald-400/30 checked:bg-emerald-500 checked:border-emerald-500 focus:ring-2 focus:ring-emerald-400/20 cursor-pointer"
+                    />
+                    <span className="ml-2 text-emerald-100 group-hover:text-emerald-50 transition">
+                      Remember me
+                    </span>
+                  </label>
+                  <a
+                    href="#"
+                    className="text-emerald-400 hover:text-emerald-300 transition"
+                  >
+                    Forgot password?
+                  </a>
+                </div>
+              </>
+            ) : (
+              <div>
+                <label
+                  htmlFor="otp"
+                  className="block text-sm font-semibold text-emerald-100 mb-3"
+                >
+                  Enter 6-digit OTP
+                </label>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
+                  <input
+                    id="otp"
+                    type="text"
+                    maxLength="6"
+                    placeholder="123456"
+                    value={otp}
+                    onChange={(e) => {
+                      setOtp(e.target.value);
+                      if (errors.otp) setErrors({ ...errors, otp: "" });
+                    }}
+                    className="w-full pl-12 pr-4 py-3 tracking-[0.5em] text-center bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
+                  />
+                </div>
+                {errors.otp && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-red-400 text-center text-sm mt-2"
+                  >
+                    {errors.otp}
+                  </motion.p>
+                )}
+                <p className="text-emerald-200 text-xs text-center mt-4">
+                  We've sent a verification code to<br />
+                  <span className="font-semibold text-emerald-400">{formData.email}</span>
+                </p>
+              </div>
+            )}
 
             {/* Submit Button */}
             <motion.button
@@ -177,11 +234,11 @@ const LoginPage = () => {
               {loading ? (
                 <>
                   <Loader className="w-5 h-5 animate-spin" />
-                  Signing In...
+                  {step === 1 ? "Signing In..." : "Verifying..."}
                 </>
               ) : (
                 <>
-                  Sign In
+                  {step === 1 ? "Sign In" : "Verify OTP"}
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}

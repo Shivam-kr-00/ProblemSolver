@@ -75,7 +75,11 @@ tasksCompleted: {
     type: Number,
     default: 0,
 },
-
+    Verified:{
+        type: Boolean,
+        default:false
+    }
+    
 },
     {
         timestamps: true

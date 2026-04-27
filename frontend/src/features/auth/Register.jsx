@@ -11,8 +11,10 @@ const SignupPage = () => {
     password: "",
     confirmPassword: "",
   });
+  const [step, setStep] = useState(1);
+  const [otp, setOtp] = useState("");
   const [errors, setErrors] = useState({});
-  const { signup, loading, user } = useAuthStore();
+  const { signup, verifyEmail, loading, user } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,14 +47,28 @@ const SignupPage = () => {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newErrors = validateForm();
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
+    if (step === 1) {
+      const newErrors = validateForm();
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+      }
+      const success = await signup(formData);
+      if (success) {
+        setStep(2);
+      }
+    } else {
+      if (!otp || otp.length < 6) {
+        setErrors({ otp: "Please enter a valid 6-digit OTP" });
+        return;
+      }
+      const success = await verifyEmail({ email: formData.email, otp });
+      if (success) {
+        navigate("/");
+      }
     }
-    signup(formData);
   };
 
   const containerVariants = {
@@ -103,190 +119,231 @@ const SignupPage = () => {
             onSubmit={handleSubmit}
             className="mt-10 space-y-6"
           >
-            {/* Name Field */}
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-semibold text-emerald-100 mb-3"
-              >
-                Full Name
-              </label>
-              <div className="relative group">
-                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="John Doe"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
-                />
-              </div>
-              {errors.name && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-400 text-sm mt-2"
-                >
-                  {errors.name}
-                </motion.p>
-              )}
-            </div>
-
-            {/* Email Field */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-semibold text-emerald-100 mb-3"
-              >
-                Email Address
-              </label>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
-                />
-              </div>
-              {errors.email && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-400 text-sm mt-2"
-                >
-                  {errors.email}
-                </motion.p>
-              )}
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-semibold text-emerald-100 mb-3"
-              >
-                Password
-              </label>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Create a strong password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
-                />
-              </div>
-
-              {/* Password Strength Indicator */}
-              {formData.password && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-2 space-y-2"
-                >
-                  <div className="flex gap-1 h-1">
-                    <div
-                      className={`flex-1 rounded-full transition ${
-                        formData.password ? "bg-red-500" : "bg-emerald-500/30"
-                      }`}
-                    />
-                    <div
-                      className={`flex-1 rounded-full transition ${
-                        passwordStrength.medium
-                          ? "bg-yellow-500"
-                          : "bg-emerald-500/30"
-                      }`}
-                    />
-                    <div
-                      className={`flex-1 rounded-full transition ${
-                        passwordStrength.strong
-                          ? "bg-emerald-500"
-                          : "bg-emerald-500/30"
-                      }`}
+            {step === 1 ? (
+              <>
+                {/* Name Field */}
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-semibold text-emerald-100 mb-3"
+                  >
+                    Full Name
+                  </label>
+                  <div className="relative group">
+                    <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      placeholder="John Doe"
+                      value={formData.name}
+                      onChange={handleChange}
+                      className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
                     />
                   </div>
-                  <p className="text-xs text-emerald-300">
-                    {passwordStrength.weak
-                      ? "Weak password"
-                      : passwordStrength.medium
-                        ? "Medium strength"
-                        : "Strong password"}
-                  </p>
-                </motion.div>
-              )}
-
-              {errors.password && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-400 text-sm mt-2"
-                >
-                  {errors.password}
-                </motion.p>
-              )}
-            </div>
-
-            {/* Confirm Password Field */}
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-semibold text-emerald-100 mb-3"
-              >
-                Confirm Password
-              </label>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
-                {formData.confirmPassword === formData.password &&
-                  formData.password && (
-                    <Check className="absolute right-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5" />
+                  {errors.name && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-400 text-sm mt-2"
+                    >
+                      {errors.name}
+                    </motion.p>
                   )}
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
-                />
-              </div>
-              {errors.confirmPassword && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-400 text-sm mt-2"
-                >
-                  {errors.confirmPassword}
-                </motion.p>
-              )}
-            </div>
+                </div>
 
-            {/* Terms & Conditions */}
-            <label className="flex items-start cursor-pointer group">
-              <input
-                type="checkbox"
-                className="w-4 h-4 rounded bg-white/10 border border-emerald-400/30 checked:bg-emerald-500 checked:border-emerald-500 focus:ring-2 focus:ring-emerald-400/20 cursor-pointer mt-1"
-              />
-              <span className="ml-3 text-sm text-emerald-100 group-hover:text-emerald-50 transition">
-                I agree to the{" "}
-                <a href="#" className="text-emerald-400 hover:text-emerald-300">
-                  Terms & Conditions
-                </a>{" "}
-                and{" "}
-                <a href="#" className="text-emerald-400 hover:text-emerald-300">
-                  Privacy Policy
-                </a>
-              </span>
-            </label>
+                {/* Email Field */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-semibold text-emerald-100 mb-3"
+                  >
+                    Email Address
+                  </label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
+                    />
+                  </div>
+                  {errors.email && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-400 text-sm mt-2"
+                    >
+                      {errors.email}
+                    </motion.p>
+                  )}
+                </div>
+
+                {/* Password Field */}
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-semibold text-emerald-100 mb-3"
+                  >
+                    Password
+                  </label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      placeholder="Create a strong password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
+                    />
+                  </div>
+
+                  {/* Password Strength Indicator */}
+                  {formData.password && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-2 space-y-2"
+                    >
+                      <div className="flex gap-1 h-1">
+                        <div
+                          className={`flex-1 rounded-full transition ${
+                            formData.password ? "bg-red-500" : "bg-emerald-500/30"
+                          }`}
+                        />
+                        <div
+                          className={`flex-1 rounded-full transition ${
+                            passwordStrength.medium
+                              ? "bg-yellow-500"
+                              : "bg-emerald-500/30"
+                          }`}
+                        />
+                        <div
+                          className={`flex-1 rounded-full transition ${
+                            passwordStrength.strong
+                              ? "bg-emerald-500"
+                              : "bg-emerald-500/30"
+                          }`}
+                        />
+                      </div>
+                      <p className="text-xs text-emerald-300">
+                        {passwordStrength.weak
+                          ? "Weak password"
+                          : passwordStrength.medium
+                            ? "Medium strength"
+                            : "Strong password"}
+                      </p>
+                    </motion.div>
+                  )}
+
+                  {errors.password && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-400 text-sm mt-2"
+                    >
+                      {errors.password}
+                    </motion.p>
+                  )}
+                </div>
+
+                {/* Confirm Password Field */}
+                <div>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-semibold text-emerald-100 mb-3"
+                  >
+                    Confirm Password
+                  </label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
+                    {formData.confirmPassword === formData.password &&
+                      formData.password && (
+                        <Check className="absolute right-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5" />
+                      )}
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
+                    />
+                  </div>
+                  {errors.confirmPassword && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-400 text-sm mt-2"
+                    >
+                      {errors.confirmPassword}
+                    </motion.p>
+                  )}
+                </div>
+
+                {/* Terms & Conditions */}
+                <label className="flex items-start cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 rounded bg-white/10 border border-emerald-400/30 checked:bg-emerald-500 checked:border-emerald-500 focus:ring-2 focus:ring-emerald-400/20 cursor-pointer mt-1"
+                  />
+                  <span className="ml-3 text-sm text-emerald-100 group-hover:text-emerald-50 transition">
+                    I agree to the{" "}
+                    <a href="#" className="text-emerald-400 hover:text-emerald-300">
+                      Terms & Conditions
+                    </a>{" "}
+                    and{" "}
+                    <a href="#" className="text-emerald-400 hover:text-emerald-300">
+                      Privacy Policy
+                    </a>
+                  </span>
+                </label>
+              </>
+            ) : (
+              <div>
+                <label
+                  htmlFor="otp"
+                  className="block text-sm font-semibold text-emerald-100 mb-3"
+                >
+                  Enter 6-digit Verification Code
+                </label>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400 w-5 h-5 group-focus-within:text-emerald-300 transition" />
+                  <input
+                    id="otp"
+                    type="text"
+                    maxLength="6"
+                    placeholder="123456"
+                    value={otp}
+                    onChange={(e) => {
+                      setOtp(e.target.value);
+                      if (errors.otp) setErrors({ ...errors, otp: "" });
+                    }}
+                    className="w-full pl-12 pr-4 py-3 tracking-[0.5em] text-center bg-white/10 backdrop-blur-md border border-emerald-500/30 rounded-xl text-white placeholder-emerald-200/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition duration-300"
+                  />
+                </div>
+                {errors.otp && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-red-400 text-center text-sm mt-2"
+                  >
+                    {errors.otp}
+                  </motion.p>
+                )}
+                <p className="text-emerald-200 text-xs text-center mt-4">
+                  We've sent a verification code to<br />
+                  <span className="font-semibold text-emerald-400">{formData.email}</span>
+                </p>
+              </div>
+            )}
 
             {/* Submit Button */}
             <motion.button
@@ -299,11 +356,11 @@ const SignupPage = () => {
               {loading ? (
                 <>
                   <Loader className="w-5 h-5 animate-spin" />
-                  Creating Account...
+                  {step === 1 ? "Creating Account..." : "Verifying..."}
                 </>
               ) : (
                 <>
-                  Create Account
+                  {step === 1 ? "Create Account" : "Verify Email"}
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
