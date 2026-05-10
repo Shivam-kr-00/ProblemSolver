@@ -4,11 +4,8 @@ import { env } from '../config/env.js';
 const transporter = nodemailer.createTransport({
     service:"gmail",
     auth:{
-        type:'OAuth2',
         user:env.emailUser,
-        refreshToken:env.refreshToken,
-        clientId:env.clientId,
-        clientSecret:env.clientSecret,
+        pass:env.emailAppPassword,
     }
 })
 

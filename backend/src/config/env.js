@@ -18,8 +18,6 @@ export const env = {
     cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
 
     //nodemailer configuration
-    clientId: process.env.CLIENT_ID,
-    clientSecret: process.env.CLIENT_SECRET,
     emailUser: process.env.EMAIL_USER,
-    refreshToken: process.env.REFRESH_TOKEN
+    emailAppPassword: process.env.EMAIL_APP_PASSWORD
 };
