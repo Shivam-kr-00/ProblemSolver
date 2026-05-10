@@ -17,7 +17,6 @@ export const env = {
     cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
     cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
 
-    //nodemailer configuration
-    emailUser: process.env.EMAIL_USER,
-    emailAppPassword: process.env.EMAIL_APP_PASSWORD
+    //email configuration
+    resendApiKey: process.env.RESEND_API_KEY
 };
