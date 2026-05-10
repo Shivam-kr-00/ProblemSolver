@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
+import dns from 'dns';
+
+// Force IPv4 resolution to fix ENETUNREACH error on Render
+dns.setDefaultResultOrder('ipv4first');
 
 const transporter = nodemailer.createTransport({
     service:"gmail",
