@@ -1,48 +1,86 @@
 import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 
-// Validate that email credentials are configured
-// This prevents hanging SMTP connections on startup/send when env vars are missing
-if (!env.emailUser || !env.emailAppPassword) {
+/**
+ * Email service with automatic provider selection.
+ *
+ * Tries providers in order of priority:
+ * 1. Gmail SMTP  (EMAIL_USER + EMAIL_APP_PASSWORD)
+ * 2. Brevo SMTP  (BREVO_SMTP_USER + BREVO_SMTP_KEY)
+ *
+ * Set whichever credentials you have in your Render environment variables.
+ * At least one provider must be configured for OTP emails to work.
+ */
+
+// ─── Build transporter from available credentials ─────────────────────────────
+
+let transporter = null;
+let activeProvider = null;
+
+if (env.emailUser && env.emailAppPassword) {
+    transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: env.emailUser,
+            pass: env.emailAppPassword,
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
+    });
+    activeProvider = 'Gmail';
+
+} else if (env.brevoSmtpUser && env.brevoSmtpKey) {
+    transporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false,
+        auth: {
+            user: env.brevoSmtpUser,
+            pass: env.brevoSmtpKey,
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
+    });
+    activeProvider = 'Brevo';
+
+} else {
     console.warn(
-        '[EmailService] WARNING: EMAIL_USER or EMAIL_APP_PASSWORD is not set. ' +
-        'OTP emails will fail. Please add these environment variables on Render.'
+        '[EmailService] ⚠️  No email credentials configured!\n' +
+        '  Add one of these pairs to your Render environment variables:\n' +
+        '  • Gmail:  EMAIL_USER + EMAIL_APP_PASSWORD\n' +
+        '  • Brevo:  BREVO_SMTP_USER + BREVO_SMTP_KEY\n' +
+        '  OTP emails will fail until credentials are set.'
     );
 }
 
-// Gmail SMTP transporter using App Password
-// Works locally and on Render (port 587 is not blocked by Render)
-// Requires: EMAIL_USER=yourname@gmail.com, EMAIL_APP_PASSWORD=your-16-char-app-password
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: env.emailUser,
-        pass: env.emailAppPassword,
-    },
-    // Hard timeouts so a misconfigured SMTP doesn't hang the HTTP request
-    connectionTimeout: 10000,  // 10s to establish TCP connection
-    greetingTimeout: 10000,    // 10s for SMTP greeting
-    socketTimeout: 15000,      // 15s of socket inactivity allowed
-});
+if (activeProvider) {
+    console.log(`[EmailService] Using provider: ${activeProvider}`);
+}
+
+// ─── sendEmail ────────────────────────────────────────────────────────────────
 
 export const sendEmail = async (to, subject, text, html) => {
-    // Fail fast and clearly if credentials aren't configured
-    if (!env.emailUser || !env.emailAppPassword) {
+    if (!transporter) {
         throw new Error(
-            'Email service not configured: EMAIL_USER and EMAIL_APP_PASSWORD must be set as environment variables.'
+            'Email service not configured. ' +
+            'Set EMAIL_USER + EMAIL_APP_PASSWORD (Gmail) or ' +
+            'BREVO_SMTP_USER + BREVO_SMTP_KEY (Brevo) in your environment variables.'
         );
     }
 
+    const senderAddress = env.emailUser || env.brevoSmtpUser;
+
     const mailOptions = {
-        from: `"ProblemFindr" <${env.emailUser}>`,
+        from: `"ProblemFindr" <${senderAddress}>`,
         to,
         subject,
         text,
         html,
     };
 
-    // Errors propagate to the controller for proper error responses
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully via Gmail:', info.messageId);
+    console.log(`[EmailService] Email sent via ${activeProvider}:`, info.messageId);
     return info;
 };
