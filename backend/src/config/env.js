@@ -20,8 +20,9 @@ export const env = {
 
     //email configuration
     resendApiKey: process.env.RESEND_API_KEY,
+    brevoApiKey: process.env.BREVO_API_KEY,        // REST API key (xkeysib-...) — for Render
     brevoSmtpUser: process.env.BREVO_SMTP_USER,
-    brevoSmtpKey: process.env.BREVO_SMTP_KEY,
+    brevoSmtpKey: process.env.BREVO_SMTP_KEY,      // SMTP key (xsmtpsib-...) — for local dev
     emailUser: process.env.EMAIL_USER,
     emailAppPassword: process.env.EMAIL_APP_PASSWORD,
 
