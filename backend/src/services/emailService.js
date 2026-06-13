@@ -65,7 +65,12 @@ export const sendEmail = async (to, subject, text, html) => {
         throw new Error('Email service not configured. Add BREVO_API_KEY to Render environment variables.');
     }
 
-    const senderEmail = env.emailUser || env.brevoSmtpUser || 'noreply@problemfindr.com';
+    // IMPORTANT: When using Brevo API, sender MUST be Brevo's own relay address.
+    // Using a Gmail address as sender causes SPF failure → Gmail rejects delivery
+    // because only Google's servers are authorised to send email for @gmail.com.
+    const senderEmail = activeProvider === 'brevo-api'
+        ? (env.brevoSmtpUser || 'noreply@problemfindr.com')  // Brevo-signed address
+        : (env.emailUser || env.brevoSmtpUser || 'noreply@problemfindr.com');
 
     // ── Brevo REST API (production / Render) ──────────────────────────────────
     if (activeProvider === 'brevo-api') {
