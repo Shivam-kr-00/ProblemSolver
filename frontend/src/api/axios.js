@@ -3,6 +3,9 @@ import axios from 'axios';
 const axiosInstance = axios.create({
     baseURL: import.meta.env.MODE === "development" ? "http://localhost:5000/api" : (import.meta.env.VITE_API_URL || "/api"),
     withCredentials: true,
+    // 30-second timeout — if the server hangs (e.g. email service with missing credentials),
+    // the request fails cleanly instead of spinning forever.
+    timeout: 30000,
 });
 
 axiosInstance.interceptors.response.use(
