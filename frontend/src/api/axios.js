@@ -14,7 +14,11 @@ axiosInstance.interceptors.response.use(
 
         if (originalConfig && originalConfig.url !== "/auth/login" && error.response) {
             // Access token expired or unauthorized
-            if (error.response.status === 401 && !originalConfig._retry) {
+            if (
+                error.response.status === 401 &&
+                !originalConfig._retry &&
+                !originalConfig._skipAuthRetry  // don't retry if caller opted out
+            ) {
                 originalConfig._retry = true;
 
                 // Prevent infinite loop if the refresh token call itself fails
@@ -39,6 +43,7 @@ axiosInstance.interceptors.response.use(
 
         return Promise.reject(error);
     }
+
 );
 
 export default axiosInstance;
