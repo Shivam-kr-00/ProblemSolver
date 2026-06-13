@@ -2,35 +2,23 @@ import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 
 /**
- * Email service with automatic provider selection.
+ * Email service — Brevo SMTP is used first, Gmail as fallback.
  *
- * Tries providers in order of priority:
- * 1. Gmail SMTP  (EMAIL_USER + EMAIL_APP_PASSWORD)
- * 2. Brevo SMTP  (BREVO_SMTP_USER + BREVO_SMTP_KEY)
+ * WHY Brevo is prioritised over Gmail:
+ *   Render free tier blocks IPv6 outbound connections.
+ *   Gmail SMTP (smtp.gmail.com) resolves to IPv6 → ENETUNREACH on Render.
+ *   Brevo SMTP (smtp-relay.brevo.com) uses IPv4 → works on Render free tier.
  *
- * Set whichever credentials you have in your Render environment variables.
- * At least one provider must be configured for OTP emails to work.
+ * Required environment variables (set at least ONE pair):
+ *   Brevo:  BREVO_SMTP_USER + BREVO_SMTP_KEY   ← preferred for production
+ *   Gmail:  EMAIL_USER + EMAIL_APP_PASSWORD      ← works locally, blocked on Render free
  */
-
-// ─── Build transporter from available credentials ─────────────────────────────
 
 let transporter = null;
 let activeProvider = null;
 
-if (env.emailUser && env.emailAppPassword) {
-    transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: env.emailUser,
-            pass: env.emailAppPassword,
-        },
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 15000,
-    });
-    activeProvider = 'Gmail';
-
-} else if (env.brevoSmtpUser && env.brevoSmtpKey) {
+if (env.brevoSmtpUser && env.brevoSmtpKey) {
+    // ── Brevo SMTP (IPv4, works on Render free tier) ─────────────────────────
     transporter = nodemailer.createTransport({
         host: 'smtp-relay.brevo.com',
         port: 587,
@@ -45,13 +33,25 @@ if (env.emailUser && env.emailAppPassword) {
     });
     activeProvider = 'Brevo';
 
+} else if (env.emailUser && env.emailAppPassword) {
+    // ── Gmail SMTP (IPv6, works locally but blocked on Render free tier) ─────
+    transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: env.emailUser,
+            pass: env.emailAppPassword,
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
+    });
+    activeProvider = 'Gmail';
+
 } else {
     console.warn(
-        '[EmailService] ⚠️  No email credentials configured!\n' +
-        '  Add one of these pairs to your Render environment variables:\n' +
-        '  • Gmail:  EMAIL_USER + EMAIL_APP_PASSWORD\n' +
-        '  • Brevo:  BREVO_SMTP_USER + BREVO_SMTP_KEY\n' +
-        '  OTP emails will fail until credentials are set.'
+        '[EmailService] ⚠️  No email credentials found!\n' +
+        '  Add BREVO_SMTP_USER + BREVO_SMTP_KEY to your Render environment variables.\n' +
+        '  OTP emails will fail until this is configured.'
     );
 }
 
@@ -65,12 +65,14 @@ export const sendEmail = async (to, subject, text, html) => {
     if (!transporter) {
         throw new Error(
             'Email service not configured. ' +
-            'Set EMAIL_USER + EMAIL_APP_PASSWORD (Gmail) or ' +
-            'BREVO_SMTP_USER + BREVO_SMTP_KEY (Brevo) in your environment variables.'
+            'Add BREVO_SMTP_USER + BREVO_SMTP_KEY environment variables on Render.'
         );
     }
 
-    const senderAddress = env.emailUser || env.brevoSmtpUser;
+    // Use the sender address appropriate for each provider
+    const senderAddress = env.brevoSmtpUser
+        ? (env.emailUser || env.brevoSmtpUser)   // Brevo sends from your verified email
+        : env.emailUser;
 
     const mailOptions = {
         from: `"ProblemFindr" <${senderAddress}>`,
