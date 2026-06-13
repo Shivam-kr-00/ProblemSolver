@@ -23,10 +23,15 @@ winston.addColors(colors);
 // Define the format of the logs
 const format = winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
-    winston.format.colorize({ all: true }), // Colorize based on level
-    winston.format.printf(
-        (info) => `${info.timestamp} ${info.level}: ${info.message}`
-    )
+    winston.format.colorize({ all: true }),
+    winston.format.printf((info) => {
+        // Print message + any extra metadata (e.g. statusCode, googleError, stack)
+        const { timestamp, level, message, ...meta } = info;
+        const metaStr = Object.keys(meta).length
+            ? '\n' + JSON.stringify(meta, null, 2)
+            : '';
+        return `${timestamp} ${level}: ${message}${metaStr}`;
+    })
 );
 
 // Define where the logs should go (Transports)

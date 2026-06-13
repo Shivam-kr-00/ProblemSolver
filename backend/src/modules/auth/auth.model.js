@@ -18,8 +18,21 @@ const authSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: [true, "Password is required"],
+        required: function () {
+            // Password is only required if user is NOT using OAuth
+            return !this.googleId && !this.githubId;
+        },
         minlength: [6, "Password must be at least 6 characters long"],
+    },
+    googleId: {
+        type: String,
+        default: null,
+        sparse: true,
+    },
+    githubId: {
+        type: String,
+        default: null,
+        sparse: true,
     },
     role: {
         type: String,
@@ -62,24 +75,24 @@ const authSchema = new mongoose.Schema({
         default: true,
     },
     totalContributions: {
-    type: Number,
-    default: 0,
-},
+        type: Number,
+        default: 0,
+    },
 
-problemsCreated: {
-    type: Number,
-    default: 0,
-},
+    problemsCreated: {
+        type: Number,
+        default: 0,
+    },
 
-tasksCompleted: {
-    type: Number,
-    default: 0,
-},
-    Verified:{
+    tasksCompleted: {
+        type: Number,
+        default: 0,
+    },
+    Verified: {
         type: Boolean,
-        default:false
+        default: false
     }
-    
+
 },
     {
         timestamps: true
@@ -100,7 +113,7 @@ authSchema.pre('save', async function () {
 
 // Method to compare password during login
 authSchema.methods.comparePassword = async function (candidatePassword) {
-    try {       
+    try {
         return await bcrypt.compare(candidatePassword, this.password);
     } catch (error) {
         throw new Error(error);

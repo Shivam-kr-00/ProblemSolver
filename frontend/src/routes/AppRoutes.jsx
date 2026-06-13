@@ -4,6 +4,7 @@ import AdminRoute from "../components/layout/AdminRoute.jsx";
 
 import LoginPage from "../features/auth/Login.jsx";
 import SignupPage from "../features/auth/Register.jsx";
+import CallbackPage from "../pages/auth/CallbackPage.jsx";
 import HomePage from "../pages/HomePage.jsx";
 
 import Dashboard from "../pages/user/Dashboard.jsx";
@@ -26,6 +27,7 @@ const AppRoutes = () => {
       {/* Auth Routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/auth/callback" element={<CallbackPage />} />
 
       {/* Home Page */}
       <Route

@@ -1,32 +1,27 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 
-const resend = new Resend(env.resendApiKey);
+// Gmail SMTP transporter using App Password
+// Works locally and on Render (port 587 is not blocked)
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: env.emailUser,
+        pass: env.emailAppPassword,
+    },
+});
 
 export const sendEmail = async (to, subject, text, html) => {
-    try {
-        const { data, error } = await resend.emails.send({
-            from: 'onboarding@resend.dev', // use this until you verify a custom domain
-            to: to,
-            subject: subject,
-            text: text,
-            html: html,
-        });
+    const mailOptions = {
+        from: `"ProblemFindr" <${env.emailUser}>`,
+        to,
+        subject,
+        text,
+        html,
+    };
 
-        if (error) {
-            console.error('Error in sending email', error);
-            return;
-        }
-
-        console.log('Email sent successfully', data.id);
-    } catch (error) {
-        console.error('Error in sending email', error);
-    }
+    // Errors propagate to the controller for proper error responses
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent successfully via Gmail:', info.messageId);
+    return info;
 };
-
-
-
-
-
-
-//create a function to send mail

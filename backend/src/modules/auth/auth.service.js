@@ -46,19 +46,23 @@ export const setCookies = (res, accessToken, refreshToken) => {
         throw new apiError("Access and Refresh tokens are required", 400);
     }
 
+    // In production (HTTPS): secure=true + sameSite=none (required for cross-site cookies)
+    // In development (HTTP): secure=false + sameSite=lax (Chrome silently drops secure cookies on HTTP)
+    const isProduction = process.env.NODE_ENV === 'production';
+
     //set access token in cookie
     res.cookie('accessToken', accessToken, {
-        httpOnly: true, // prvent client side js access
-        secure: true, // only send over https
-        sameSite: 'none', // prevent csrf
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 15 * 60 * 1000,
     });
 
     //set refresh token in cookie
     res.cookie('refreshToken', refreshToken, {
-        httpOnly: true, // prvent client side js access
-        secure: true, // only send over https
-        sameSite: 'none', // prevent csrf
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 }

@@ -7,7 +7,7 @@ export const useAuthStore = create((set) => ({
     user: null,
     loading: false,
     checkingAuth: true,
- 
+
 
     signup: async ({ name, email, password, confirmPassword }) => {
         set({ loading: true });
@@ -25,7 +25,7 @@ export const useAuthStore = create((set) => ({
         try {
             // First, perform signup to get OTP sent
             await authApi.signup({ name, email, password });
-            
+
             set({ loading: false });
             toast.success("OTP sent to your email!");
             return true; // Indicate success to go to step 2
@@ -41,7 +41,7 @@ export const useAuthStore = create((set) => ({
         set({ loading: true });
         try {
             await authApi.verifyEmail({ email, otp });
-            
+
             const profileRes = await authApi.getProfile();
             const userData = profileRes.data.data || profileRes.data || profileRes;
 
@@ -126,6 +126,17 @@ export const useAuthStore = create((set) => ({
         }
     },
 
+    // For OAuth: Set user directly without API call
+    setUser: (userData) => {
+        set({ user: userData });
+        socket.connect();
+       // toast.success("Login successful!");
+    },
 
+    // Clear user data (for logout)
+    clearUser: () => {
+        set({ user: null });
+        socket.disconnect();
+    },
 
 }));

@@ -4,6 +4,7 @@ import mainRouter from "./routes.js";
 import cookieParser from "cookie-parser";
 import errorMiddleware from "./middlewares/error.middleware.js";
 import { app } from "./config/socket.js";
+import passport from "./config/passport.js";
 
 app.set("trust proxy", 1);
 
@@ -29,6 +30,7 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(cookieParser());
+app.use(passport.initialize());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
