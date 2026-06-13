@@ -293,7 +293,7 @@ const LoginPage = () => {
             onClick={() => {
               // Use VITE_API_URL in production, fallback to localhost for dev
               const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
-              window.location.href = `${backendUrl}/api/auth/google`;
+              window.location.href = `${backendUrl}/auth/google`;
             }}
             className="w-full mt-6 py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl transition duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
           >
@@ -310,7 +310,7 @@ const LoginPage = () => {
             whileTap={{ scale: 0.98 }}
             onClick={() => {
               const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
-              window.location.href = `${backendUrl}/api/auth/github`;
+              window.location.href = `${backendUrl}/auth/github`;
             }}
             className="w-full mt-4 py-3 px-4 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-gray-900 text-white font-semibold rounded-xl transition duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
           >

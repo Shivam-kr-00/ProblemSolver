@@ -5,16 +5,17 @@ import { env } from '../config/env.js';
 /**
  * Email service — tries providers in this order:
  *
- * 1. Brevo REST API  (BREVO_API_KEY = xkeysib-...)  → HTTPS port 443, works on Render
- * 2. Brevo SMTP      (BREVO_SMTP_KEY = xsmtpsib-...) → port 587, works locally only
- * 3. Gmail SMTP      (EMAIL_USER + EMAIL_APP_PASSWORD) → port 587, works locally only
+ * 1. Resend API      (RESEND_API_KEY = re_...)           → HTTPS, best for transactional emails
+ * 2. Brevo REST API  (BREVO_API_KEY = xkeysib-...)      → HTTPS port 443, works on Render
+ * 3. Brevo SMTP      (BREVO_SMTP_KEY = xsmtpsib-...)    → port 587, works locally only
+ * 4. Gmail SMTP      (EMAIL_USER + EMAIL_APP_PASSWORD)  → port 587, works locally only
  *
- * For Render (production): Add BREVO_API_KEY to environment variables.
- * For local dev: BREVO_SMTP_KEY or EMAIL_USER already works.
+ * For Render (production): Add RESEND_API_KEY to environment variables (recommended).
+ * For local dev: RESEND_API_KEY or BREVO_SMTP_KEY or EMAIL_USER works.
  *
- * How to get BREVO_API_KEY:
- *   brevo.com → top-right avatar → Settings → API Keys → Generate API key
- *   It will start with "xkeysib-..."
+ * How to get RESEND_API_KEY:
+ *   resend.com → API Keys → Create API Key
+ *   It will start with "re_..."
  */
 
 // ─── Determine active provider ────────────────────────────────────────────────
@@ -22,12 +23,17 @@ import { env } from '../config/env.js';
 let activeProvider = null;
 let smtpTransporter = null;
 
-if (env.brevoApiKey) {
+if (env.resendApiKey) {
+    activeProvider = 'resend-api';
+    console.log('[EmailService] Using provider: Resend API (HTTPS — best for transactional emails)');
+
+} else if (env.brevoApiKey) {
     activeProvider = 'brevo-api';
     console.log('[EmailService] Using provider: Brevo REST API (HTTPS — works on Render)');
 
 } else if (env.brevoSmtpKey && env.brevoSmtpUser) {
     activeProvider = 'brevo-smtp';
+    console.log(`[EmailService] Brevo SMTP User: ${env.brevoSmtpUser}`);
     smtpTransporter = nodemailer.createTransport({
         host: 'smtp-relay.brevo.com',
         port: 587,
@@ -53,8 +59,8 @@ if (env.brevoApiKey) {
 } else {
     console.warn(
         '[EmailService] ⚠️  No email provider configured!\n' +
-        '  For Render: add BREVO_API_KEY (xkeysib-...) to environment variables.\n' +
-        '  Get it: brevo.com → Settings → API Keys → Generate'
+        '  For Render: add RESEND_API_KEY (re_...) to environment variables.\n' +
+        '  Get it: resend.com → API Keys → Create API Key'
     );
 }
 
@@ -62,15 +68,63 @@ if (env.brevoApiKey) {
 
 export const sendEmail = async (to, subject, text, html) => {
     if (!activeProvider) {
-        throw new Error('Email service not configured. Add BREVO_API_KEY to Render environment variables.');
+        throw new Error('Email service not configured. Add RESEND_API_KEY to Render environment variables.');
     }
 
-    // IMPORTANT: When using Brevo API, sender MUST be Brevo's own relay address.
-    // Using a Gmail address as sender causes SPF failure → Gmail rejects delivery
+    // IMPORTANT: Sender MUST be a verified address to avoid SPF failures.
+    // Using a Gmail address as sender causes SPF failure → email providers reject delivery
     // because only Google's servers are authorised to send email for @gmail.com.
-    const senderEmail = activeProvider === 'brevo-api'
-        ? (env.brevoSmtpUser || 'noreply@problemfindr.com')  // Brevo-signed address
-        : (env.emailUser || env.brevoSmtpUser || 'noreply@problemfindr.com');
+    const senderEmail = activeProvider === 'resend-api'
+        ? 'noreply@problemfindr.com'  // Resend handles sender verification
+        : activeProvider === 'brevo-api'
+            ? (env.brevoSmtpUser || 'noreply@brevo.com')  // Use Brevo SMTP user or default
+            : (env.brevoSmtpUser || env.emailUser || 'noreply@problemfindr.com');  // Prefer Brevo SMTP user over Gmail
+
+    console.log(`[EmailService] Using sender email: ${senderEmail} (provider: ${activeProvider})`);
+
+    // ── Resend API (recommended for transactional emails) ─────────────────────
+    if (activeProvider === 'resend-api') {
+        const payload = JSON.stringify({
+            from: `ProblemFindr <${senderEmail}>`,
+            to: [to],
+            subject,
+            html: html || `<p>${text}</p>`,
+            text,
+        });
+
+        return new Promise((resolve, reject) => {
+            const req = https.request({
+                hostname: 'api.resend.com',
+                path: '/v1/emails',
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'authorization': `Bearer ${env.resendApiKey}`,
+                    'content-type': 'application/json',
+                    'content-length': Buffer.byteLength(payload),
+                },
+            }, (res) => {
+                let raw = '';
+                res.on('data', (c) => (raw += c));
+                res.on('end', () => {
+                    let json;
+                    try { json = JSON.parse(raw); } catch { json = raw; }
+
+                    if (res.statusCode >= 200 && res.statusCode < 300) {
+                        console.log('[EmailService] Sent via Resend API, id:', json.id);
+                        resolve(json);
+                    } else {
+                        reject(new Error(`Resend API ${res.statusCode}: ${json?.message || raw}`));
+                    }
+                });
+            });
+
+            req.setTimeout(15000, () => { req.destroy(); reject(new Error('Resend API timed out')); });
+            req.on('error', (e) => reject(new Error(`Resend API network error: ${e.message}`)));
+            req.write(payload);
+            req.end();
+        });
+    }
 
     // ── Brevo REST API (production / Render) ──────────────────────────────────
     if (activeProvider === 'brevo-api') {

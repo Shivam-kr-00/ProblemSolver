@@ -23,6 +23,7 @@ export const env = {
     brevoApiKey: process.env.BREVO_API_KEY,        // REST API key (xkeysib-...) — for Render
     brevoSmtpUser: process.env.BREVO_SMTP_USER,
     brevoSmtpKey: process.env.BREVO_SMTP_KEY,      // SMTP key (xsmtpsib-...) — for local dev
+    brevoSenderEmail: process.env.BREVO_SENDER_EMAIL, // Brevo sender email (from Brevo Dashboard → Senders)
     emailUser: process.env.EMAIL_USER,
     emailAppPassword: process.env.EMAIL_APP_PASSWORD,
 
