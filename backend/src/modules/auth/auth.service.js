@@ -48,7 +48,7 @@ export const setCookies = (res, accessToken, refreshToken) => {
 
     // In production (HTTPS): secure=true + sameSite=none (required for cross-site cookies)
     // In development (HTTP): secure=false + sameSite=lax (Chrome silently drops secure cookies on HTTP)
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = env.nodeEnv === 'production' || process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
 
     //set access token in cookie
     res.cookie('accessToken', accessToken, {

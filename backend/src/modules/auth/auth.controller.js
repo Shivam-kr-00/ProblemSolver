@@ -150,7 +150,7 @@ export const refreshAccessToken = async (req, res, next) => {
 
         const accessToken = jwt.sign({ userId: decoded.userId }, env.accessSecret, { expiresIn: '15m' });
 
-        const isProduction = process.env.NODE_ENV === 'production';
+        const isProduction = env.nodeEnv === 'production' || process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
             secure: isProduction,
