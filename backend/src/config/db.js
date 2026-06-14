@@ -8,6 +8,10 @@ export const connectDB = async () => {
         const conn = await mongoose.connect(env.mongoUri)
         console.log(`MongoDB Connected: ${conn.connection.host}`);
 
+        // Clean up existing null OAuth IDs to prevent index creation conflicts
+        await User.updateMany({ googleId: null }, { $unset: { googleId: "" } });
+        await User.updateMany({ githubId: null }, { $unset: { githubId: "" } });
+
         // Drop conflicting unique indexes and recreate them properly with sparse flag
         // This fixes the E11000 duplicate key error for null OAuth IDs
         try {
@@ -25,9 +29,9 @@ export const connectDB = async () => {
         }
 
         // Create proper sparse unique indexes
-        await User.collection.createIndex({ googleId: 1 }, { sparse: true });
-        await User.collection.createIndex({ githubId: 1 }, { sparse: true });
-        console.log("Recreated googleId and githubId indexes with sparse flag");
+        await User.collection.createIndex({ googleId: 1 }, { unique: true, sparse: true });
+        await User.collection.createIndex({ githubId: 1 }, { unique: true, sparse: true });
+        console.log("Recreated googleId and githubId indexes with unique and sparse flags");
 
     } catch (error) {
         console.log("mongoDB connection Error :", error)

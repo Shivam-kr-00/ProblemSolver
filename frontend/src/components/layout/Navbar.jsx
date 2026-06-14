@@ -48,12 +48,56 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-8">
-          {user?.role === "ADMIN" && (
+          {user ? (
             <>
+              {user?.role === "ADMIN" && (
+                <>
+                  <Link
+                    to="/admin"
+                    className={`text-sm font-semibold transition ${
+                      isActive("/admin") && !isActive("/admin/")
+                        ? "text-emerald-400"
+                        : "text-emerald-100 hover:text-emerald-400"
+                    }`}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/admin/problems"
+                    className={`text-sm font-semibold transition ${
+                      isActive("/admin/problems")
+                        ? "text-emerald-400"
+                        : "text-emerald-100 hover:text-emerald-400"
+                    }`}
+                  >
+                    Problems
+                  </Link>
+                  <Link
+                    to="/admin/tasks"
+                    className={`text-sm font-semibold transition ${
+                      isActive("/admin/tasks")
+                        ? "text-emerald-400"
+                        : "text-emerald-100 hover:text-emerald-400"
+                    }`}
+                  >
+                    Tasks
+                  </Link>
+                  <Link
+                    to="/admin/users"
+                    className={`text-sm font-semibold transition ${
+                      isActive("/admin/users")
+                        ? "text-emerald-400"
+                        : "text-emerald-100 hover:text-emerald-400"
+                    }`}
+                  >
+                    Users
+                  </Link>
+                </>
+              )}
               <Link
-                to="/admin"
+                to="/dashboard"
                 className={`text-sm font-semibold transition ${
-                  isActive("/admin") && !isActive("/admin/")
+                  isActive("/dashboard")
                     ? "text-emerald-400"
                     : "text-emerald-100 hover:text-emerald-400"
                 }`}
@@ -61,9 +105,9 @@ const Navbar = () => {
                 Dashboard
               </Link>
               <Link
-                to="/admin/problems"
+                to="/problems"
                 className={`text-sm font-semibold transition ${
-                  isActive("/admin/problems")
+                  isActive("/problems")
                     ? "text-emerald-400"
                     : "text-emerald-100 hover:text-emerald-400"
                 }`}
@@ -71,90 +115,84 @@ const Navbar = () => {
                 Problems
               </Link>
               <Link
-                to="/admin/tasks"
+                to="/leaderboard"
                 className={`text-sm font-semibold transition ${
-                  isActive("/admin/tasks")
+                  isActive("/leaderboard")
                     ? "text-emerald-400"
                     : "text-emerald-100 hover:text-emerald-400"
                 }`}
               >
-                Tasks
+                Leaderboard
               </Link>
               <Link
-                to="/admin/users"
+                to="/profile"
                 className={`text-sm font-semibold transition ${
-                  isActive("/admin/users")
+                  isActive("/profile")
                     ? "text-emerald-400"
                     : "text-emerald-100 hover:text-emerald-400"
                 }`}
               >
-                Users
+                Profile
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/problems"
+                className={`text-sm font-semibold transition ${
+                  isActive("/problems")
+                    ? "text-emerald-400"
+                    : "text-emerald-100 hover:text-emerald-400"
+                }`}
+              >
+                Problems
+              </Link>
+              <Link
+                to="/leaderboard"
+                className={`text-sm font-semibold transition ${
+                  isActive("/leaderboard")
+                    ? "text-emerald-400"
+                    : "text-emerald-100 hover:text-emerald-400"
+                }`}
+              >
+                Leaderboard
               </Link>
             </>
           )}
-          <Link
-            to="/dashboard"
-            className={`text-sm font-semibold transition ${
-              isActive("/dashboard")
-                ? "text-emerald-400"
-                : "text-emerald-100 hover:text-emerald-400"
-            }`}
-          >
-            Dashboard
-          </Link>
-          <Link
-            to="/problems"
-            className={`text-sm font-semibold transition ${
-              isActive("/problems")
-                ? "text-emerald-400"
-                : "text-emerald-100 hover:text-emerald-400"
-            }`}
-          >
-            Problems
-          </Link>
-          <Link
-            to="/leaderboard"
-            className={`text-sm font-semibold transition ${
-              isActive("/leaderboard")
-                ? "text-emerald-400"
-                : "text-emerald-100 hover:text-emerald-400"
-            }`}
-          >
-            Leaderboard
-          </Link>
-          <Link
-            to="/profile"
-            className={`text-sm font-semibold transition ${
-              isActive("/profile")
-                ? "text-emerald-400"
-                : "text-emerald-100 hover:text-emerald-400"
-            }`}
-          >
-            Profile
-          </Link>
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="hidden sm:flex p-2 hover:bg-emerald-500/10 rounded-lg transition">
-            <Bell className="w-5 h-5 text-emerald-300" />
-          </button>
-          <div className="relative group">
-            <button className="p-2 hover:bg-emerald-500/10 rounded-lg transition">
-              <User className="w-5 h-5 text-emerald-300" />
-            </button>
-            <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-emerald-500/20 rounded-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-              <p className="px-4 py-2 text-xs text-emerald-200">
-                {user?.email}
-              </p>
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-2 text-red-400 text-sm hover:bg-red-500/10 transition flex items-center gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Logout
+          {user ? (
+            <>
+              <button className="hidden sm:flex p-2 hover:bg-emerald-500/10 rounded-lg transition">
+                <Bell className="w-5 h-5 text-emerald-300" />
               </button>
-            </div>
-          </div>
+              <div className="relative group">
+                <button className="p-2 hover:bg-emerald-500/10 rounded-lg transition">
+                  <User className="w-5 h-5 text-emerald-300" />
+                </button>
+                <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-emerald-500/20 rounded-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                  <p className="px-4 py-2 text-xs text-emerald-200">
+                    {user?.email}
+                  </p>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-red-400 text-sm hover:bg-red-500/10 transition flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold rounded-lg transition text-sm"
+            >
+              Login
+            </Link>
+          )}
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -176,66 +214,94 @@ const Navbar = () => {
           className="md:hidden border-t border-emerald-500/20 bg-slate-900/50 backdrop-blur"
         >
           <div className="px-6 py-4 space-y-3">
-            {user?.role === "ADMIN" && (
+            {user ? (
+              <>
+                {user?.role === "ADMIN" && (
+                  <>
+                    <Link
+                      to="/admin"
+                      className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Admin Dashboard
+                    </Link>
+                    <Link
+                      to="/admin/problems"
+                      className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Manage Problems
+                    </Link>
+                    <Link
+                      to="/admin/tasks"
+                      className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Manage Tasks
+                    </Link>
+                    <Link
+                      to="/admin/users"
+                      className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Manage Users
+                    </Link>
+                  </>
+                )}
+                <Link
+                  to="/dashboard"
+                  className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/problems"
+                  className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Problems
+                </Link>
+                <Link
+                  to="/profile"
+                  className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left py-2 text-red-400 hover:text-red-300 transition flex items-center gap-2 mt-2 border-t border-slate-700/50 pt-4"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </>
+            ) : (
               <>
                 <Link
-                  to="/admin"
+                  to="/problems"
                   className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Admin Dashboard
+                  Problems
                 </Link>
                 <Link
-                  to="/admin/problems"
+                  to="/leaderboard"
                   className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Manage Problems
+                  Leaderboard
                 </Link>
                 <Link
-                  to="/admin/tasks"
+                  to="/login"
                   className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Manage Tasks
-                </Link>
-                <Link
-                  to="/admin/users"
-                  className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Manage Users
+                  Login
                 </Link>
               </>
             )}
-            <Link
-              to="/dashboard"
-              className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/problems"
-              className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Problems
-            </Link>
-            <Link
-              to="/profile"
-              className="block py-2 text-emerald-100 hover:text-emerald-400 transition"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Profile
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="w-full text-left py-2 text-red-400 hover:text-red-300 transition flex items-center gap-2 mt-2 border-t border-slate-700/50 pt-4"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </button>
           </div>
         </motion.div>
       )}

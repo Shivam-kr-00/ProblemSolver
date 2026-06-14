@@ -17,14 +17,15 @@ import {
 } from "lucide-react";
 
 const HomePage = () => {
-  const { user, checkingAuth } = useAuthStore();
+  const { user, checkingAuth, isGuest } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!checkingAuth && !user) {
+    // Allow guest users to view the home page
+    if (!checkingAuth && !user && !isGuest) {
       navigate("/login");
     }
-  }, [user, checkingAuth, navigate]);
+  }, [user, checkingAuth, isGuest, navigate]);
 
   const containerVariants = {
     hidden: { opacity: 0 },

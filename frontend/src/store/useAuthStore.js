@@ -7,7 +7,7 @@ export const useAuthStore = create((set) => ({
     user: null,
     loading: false,
     checkingAuth: true,
-
+    isGuest: false,
 
     signup: async ({ name, email, password, confirmPassword }) => {
         set({ loading: true });
@@ -45,7 +45,8 @@ export const useAuthStore = create((set) => ({
             const profileRes = await authApi.getProfile();
             const userData = profileRes.data.data || profileRes.data || profileRes;
 
-            set({ user: userData, loading: false });
+            sessionStorage.removeItem('isGuest');
+            set({ user: userData, isGuest: false, loading: false });
             socket.connect();
             toast.success("Email verified successfully! You are now logged in.");
             return true;
@@ -88,7 +89,9 @@ export const useAuthStore = create((set) => ({
             const profileRes = await authApi.getProfile();
             const userData = profileRes.data.data || profileRes.data || profileRes;
 
-            set({ user: userData, loading: false });
+            // Exit guest mode on successful login
+            sessionStorage.removeItem('isGuest');
+            set({ user: userData, isGuest: false, loading: false });
             socket.connect();
             toast.success("Login successful!");
             return true;
@@ -104,7 +107,8 @@ export const useAuthStore = create((set) => ({
 
         try {
             await authApi.logout();
-            set({ user: null, loading: false });
+            sessionStorage.removeItem('isGuest');
+            set({ user: null, isGuest: false, loading: false });
             socket.disconnect();
             toast.success("Logged out");
         } catch (error) {
@@ -115,27 +119,47 @@ export const useAuthStore = create((set) => ({
 
     checkAuth: async () => {
         set({ checkingAuth: true });
+        // Restore guest session from sessionStorage (persists on refresh, clears on tab close)
+        const savedGuest = sessionStorage.getItem('isGuest') === 'true';
+        if (savedGuest) {
+            set({ checkingAuth: false, user: null, isGuest: true });
+            return;
+        }
         try {
             const res = await authApi.getProfile();
             // Handle response - getProfile returns user directly
             const userData = res.data.data || res.data || res;
-            set({ checkingAuth: false, user: userData });
+            set({ checkingAuth: false, user: userData, isGuest: false });
             socket.connect();
         } catch (error) {
-            set({ checkingAuth: false, user: null });
+            set({ checkingAuth: false, user: null, isGuest: false });
         }
+    },
+
+    // Enter as Guest — sets guest mode, persists to sessionStorage
+    enterAsGuest: () => {
+        sessionStorage.setItem('isGuest', 'true');
+        set({ isGuest: true, user: null });
+    },
+
+    // Exit Guest — called on login/signup success
+    exitGuest: () => {
+        sessionStorage.removeItem('isGuest');
+        set({ isGuest: false });
     },
 
     // For OAuth: Set user directly without API call
     setUser: (userData) => {
-        set({ user: userData });
+        sessionStorage.removeItem('isGuest');
+        set({ user: userData, isGuest: false });
         socket.connect();
        // toast.success("Login successful!");
     },
 
     // Clear user data (for logout)
     clearUser: () => {
-        set({ user: null });
+        sessionStorage.removeItem('isGuest');
+        set({ user: null, isGuest: false });
         socket.disconnect();
     },
 

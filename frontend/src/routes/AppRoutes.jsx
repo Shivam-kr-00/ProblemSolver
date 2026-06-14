@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "../components/layout/ProtectedRoute.jsx";
 import AdminRoute from "../components/layout/AdminRoute.jsx";
+import GuestRoute from "./GuestRoute.jsx";
 
 import LoginPage from "../features/auth/Login.jsx";
 import SignupPage from "../features/auth/Register.jsx";
@@ -30,14 +31,7 @@ const AppRoutes = () => {
       <Route path="/auth/callback" element={<CallbackPage />} />
 
       {/* Home Page */}
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <HomePage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/" element={<HomePage />} />
 
       {/* User Routes */}
       <Route
@@ -48,22 +42,8 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/problems"
-        element={
-          <ProtectedRoute>
-            <ProblemsList />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/problems/:problemId"
-        element={
-          <ProtectedRoute>
-            <ProblemDetails />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/problems" element={<ProblemsList />} />
+      <Route path="/problems/:problemId" element={<ProblemDetails />} />
       <Route
         path="/create-problem"
         element={
@@ -83,9 +63,9 @@ const AppRoutes = () => {
       <Route
         path="/leaderboard"
         element={
-          <ProtectedRoute>
+          <GuestRoute>
             <Leaderboard />
-          </ProtectedRoute>
+          </GuestRoute>
         }
       />
       <Route

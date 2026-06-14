@@ -10,7 +10,7 @@ const LoginPage = () => {
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState("");
   const [errors, setErrors] = useState({});
-  const { login, verifyLoginOtp, loading, user } = useAuthStore();
+  const { login, verifyLoginOtp, loading, user, enterAsGuest } = useAuthStore();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -23,10 +23,16 @@ const LoginPage = () => {
   // Show error toast when redirected back from failed OAuth
   useEffect(() => {
     const error = searchParams.get("error");
+    const reason = searchParams.get("reason");
     if (error === "google_auth_failed") {
       toast.error("Google login failed. Please try again.");
     } else if (error === "github_auth_failed") {
       toast.error("GitHub login failed. Please try again.");
+    } else if (reason === "guest") {
+      toast("Please sign in to access this feature.", {
+        icon: "🔒",
+        style: { background: "#1e293b", color: "#e2e8f0", border: "1px solid #334155" },
+      });
     }
   }, []);
 
@@ -107,6 +113,23 @@ const LoginPage = () => {
               Sign in to access your account
             </p>
           </motion.div>
+
+          {/* Guest Access Button */}
+          <motion.button
+            variants={itemVariants}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              enterAsGuest();
+              navigate("/");
+            }}
+            className="w-full mt-4 py-3 px-4 bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold rounded-xl transition duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Enter as Guest
+          </motion.button>
 
           <motion.form
             variants={itemVariants}
@@ -291,9 +314,10 @@ const LoginPage = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => {
-              // Use VITE_API_URL in production, fallback to localhost for dev
-              const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
-              window.location.href = `${backendUrl}/auth/google`;
+              // Prevent duplicate /api/api if VITE_API_URL already has /api at the end
+              const rawUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+              const apiBase = rawUrl.endsWith("/api") ? rawUrl : `${rawUrl}/api`;
+              window.location.href = `${apiBase}/auth/google`;
             }}
             className="w-full mt-6 py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl transition duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
           >
@@ -309,8 +333,10 @@ const LoginPage = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => {
-              const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
-              window.location.href = `${backendUrl}/auth/github`;
+              // Prevent duplicate /api/api if VITE_API_URL already has /api at the end
+              const rawUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+              const apiBase = rawUrl.endsWith("/api") ? rawUrl : `${rawUrl}/api`;
+              window.location.href = `${apiBase}/auth/github`;
             }}
             className="w-full mt-4 py-3 px-4 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-gray-900 text-white font-semibold rounded-xl transition duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
           >

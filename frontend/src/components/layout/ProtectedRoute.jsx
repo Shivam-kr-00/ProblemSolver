@@ -3,7 +3,7 @@ import { useAuthStore } from "../../store/useAuthStore.js";
 import { Loader } from "lucide-react";
 
 const ProtectedRoute = ({ children }) => {
-  const { user, checkingAuth } = useAuthStore();
+  const { user, isGuest, checkingAuth } = useAuthStore();
 
   if (checkingAuth) {
     return (
@@ -16,6 +16,11 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
+  // Guests trying to access fully-protected routes → redirect with context
+  if (isGuest && !user) {
+    return <Navigate to="/login?reason=guest" replace />;
+  }
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
@@ -24,3 +29,4 @@ const ProtectedRoute = ({ children }) => {
 };
 
 export default ProtectedRoute;
+

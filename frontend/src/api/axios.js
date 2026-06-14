@@ -34,9 +34,9 @@ axiosInstance.interceptors.response.use(
                     // Retry original request
                     return axiosInstance(originalConfig);
                 } catch (_error) {
-                    // Let the application handle failed refresh (returns 401)
-                    // If they were trying to access a secure api route, forcefully redirect
-                    if (!originalConfig.url.startsWith("/auth/")) {
+                    // Don't force-redirect if the user is browsing as a guest
+                    const isGuestSession = sessionStorage.getItem('isGuest') === 'true';
+                    if (!isGuestSession && !originalConfig.url.startsWith("/auth/")) {
                         window.location.href = '/login';
                     }
                     return Promise.reject(_error);

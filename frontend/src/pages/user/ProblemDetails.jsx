@@ -25,7 +25,7 @@ import {
 const ProblemDetails = () => {
   const { problemId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, isGuest } = useAuthStore();
   const {
     getProblemById,
     currentProblem,
@@ -67,7 +67,7 @@ const ProblemDetails = () => {
   }
 
   const isOwner = currentProblem?.createdBy?._id === user?._id;
-  const canCreateTask = isOwner || user?.role === "ADMIN";
+  const canCreateTask = !isGuest && (isOwner || user?.role === "ADMIN");
 
   // Check if user has an assigned task in this problem
   const userAssignedTask = tasks?.find(
@@ -76,8 +76,8 @@ const ProblemDetails = () => {
       (task.assignedTo._id === user?._id || task.assignedTo === user?._id),
   );
 
-  // Chat is accessible to: assigned contributors, problem owner, and admins
-  const canAccessChat = !!userAssignedTask || isOwner || user?.role === "ADMIN";
+  // Chat is accessible to: assigned contributors, problem owner, and admins (not guests)
+  const canAccessChat = !isGuest && (!!userAssignedTask || isOwner || user?.role === "ADMIN");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900">
@@ -289,6 +289,20 @@ const ProblemDetails = () => {
                         </button>
                       }
                     />
+                  ) : isGuest ? (
+                    <EmptyState
+                      icon={CheckCircle}
+                      title="No Tasks Yet"
+                      description="Sign in to claim tasks and collaborate on this problem"
+                      action={
+                        <button
+                          onClick={() => navigate("/login")}
+                          className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg transition font-semibold"
+                        >
+                          Sign In to Collaborate
+                        </button>
+                      }
+                    />
                   ) : (
                     <EmptyState
                       icon={CheckCircle}
@@ -309,6 +323,19 @@ const ProblemDetails = () => {
                 Collaborator Chat
               </h2>
               <ChatBox problemId={problemId} />
+            </div>
+          ) : isGuest ? (
+            <div className="bg-slate-800/30 border border-slate-700/40 rounded-xl p-6 text-center space-y-3">
+              <MessageSquare className="w-8 h-8 text-slate-500 mx-auto" />
+              <p className="text-slate-400 text-sm">
+                Chat is available to collaborators.
+              </p>
+              <button
+                onClick={() => navigate("/login")}
+                className="inline-flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg transition font-semibold text-sm"
+              >
+                Sign In to Chat
+              </button>
             </div>
           ) : (
             <div className="bg-slate-800/30 border border-slate-700/40 rounded-xl p-6 text-center">

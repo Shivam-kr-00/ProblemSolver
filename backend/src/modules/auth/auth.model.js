@@ -26,12 +26,10 @@ const authSchema = new mongoose.Schema({
     },
     googleId: {
         type: String,
-        default: null,
         sparse: true,
     },
     githubId: {
         type: String,
-        default: null,
         sparse: true,
     },
     role: {
