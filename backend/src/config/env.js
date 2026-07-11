@@ -27,6 +27,12 @@ export const env = {
     emailUser: process.env.EMAIL_USER,
     emailAppPassword: process.env.EMAIL_APP_PASSWORD,
 
+    // EmailJS configuration
+    emailjsServiceId: process.env.EMAILJS_SERVICE_ID || process.env.SERVICE_ID,
+    emailjsTemplateId: process.env.EMAILJS_TEMPLATE_ID || process.env.TEMPLATE_ID,
+    emailjsPublicKey: process.env.EMAILJS_PUBLIC_KEY || process.env.PUBLIC_KEY,
+    emailjsPrivateKey: process.env.EMAILJS_PRIVATE_KEY || process.env.PRIVATE_KEY,
+
     googleClientId: process.env.GOOGLE_CLIENT_ID,
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
 

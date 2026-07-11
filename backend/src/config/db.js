@@ -1,39 +1,18 @@
 import mongoose from "mongoose";
 import { env } from "./env.js";
-import User from "../modules/auth/auth.model.js";
-
 
 export const connectDB = async () => {
     try {
-        const conn = await mongoose.connect(env.mongoUri)
+        const conn = await mongoose.connect(env.mongoUri);
+
         console.log(`MongoDB Connected: ${conn.connection.host}`);
 
-        // Clean up existing null OAuth IDs to prevent index creation conflicts
-        await User.updateMany({ googleId: null }, { $unset: { googleId: "" } });
-        await User.updateMany({ githubId: null }, { $unset: { githubId: "" } });
+        // Automatically create indexes defined in schemas
+        await mongoose.connection.syncIndexes();
 
-        // Drop conflicting unique indexes and recreate them properly with sparse flag
-        // This fixes the E11000 duplicate key error for null OAuth IDs
-        try {
-            await User.collection.dropIndex("googleId_1");
-            console.log("Dropped googleId index (will be recreated properly)");
-        } catch (err) {
-            // Index might not exist, that's fine
-        }
-
-        try {
-            await User.collection.dropIndex("githubId_1");
-            console.log("Dropped githubId index (will be recreated properly)");
-        } catch (err) {
-            // Index might not exist, that's fine
-        }
-
-        // Create proper sparse unique indexes
-        await User.collection.createIndex({ googleId: 1 }, { unique: true, sparse: true });
-        await User.collection.createIndex({ githubId: 1 }, { unique: true, sparse: true });
-        console.log("Recreated googleId and githubId indexes with unique and sparse flags");
-
+        console.log("Database indexes synchronized.");
     } catch (error) {
-        console.log("mongoDB connection Error :", error)
+        console.error("MongoDB Connection Error:", error);
+        throw error;
     }
-}
+};

@@ -23,7 +23,12 @@ import { env } from '../config/env.js';
 let activeProvider = null;
 let smtpTransporter = null;
 
-if (env.resendApiKey) {
+
+if (env.emailjsServiceId && env.emailjsTemplateId && env.emailjsPublicKey) {
+    activeProvider = 'emailjs';
+    console.log('[EmailService] Using provider: EmailJS REST API (HTTPS — works on Render without domain)');
+
+} else if (env.resendApiKey) {
     activeProvider = 'resend-api';
     console.log('[EmailService] Using provider: Resend API (HTTPS — best for transactional emails)');
 
@@ -81,6 +86,61 @@ export const sendEmail = async (to, subject, text, html) => {
             : (env.brevoSmtpUser || env.emailUser || 'noreply@problemfindr.com');  // Prefer Brevo SMTP user over Gmail
 
     console.log(`[EmailService] Using sender email: ${senderEmail} (provider: ${activeProvider})`);
+
+    // ── EmailJS API (works in production/Render without domain) ──────────────
+    if (activeProvider === 'emailjs') {
+        // Extract 6-digit OTP code from text if present
+        const otpMatch = text.match(/\b\d{6}\b/);
+        const extractedOtp = otpMatch ? otpMatch[0] : '';
+
+        const payload = JSON.stringify({
+            service_id: env.emailjsServiceId,
+            template_id: env.emailjsTemplateId,
+            user_id: env.emailjsPublicKey,
+            accessToken: env.emailjsPrivateKey,
+            template_params: {
+                subject: subject,
+                text_content: text,
+                html_content: html || `<p>${text}</p>`,
+                to_email: to,
+                email: to,
+                to: to,
+                to_name: to,
+                from_name: 'ProblemSolver',
+                message: text,
+                otp: extractedOtp, // Send the extracted OTP code
+            },
+        });
+
+        return new Promise((resolve, reject) => {
+            const req = https.request({
+                hostname: 'api.emailjs.com',
+                path: '/api/v1.0/email/send',
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'content-type': 'application/json',
+                    'content-length': Buffer.byteLength(payload),
+                },
+            }, (res) => {
+                let raw = '';
+                res.on('data', (c) => (raw += c));
+                res.on('end', () => {
+                    if (res.statusCode >= 200 && res.statusCode < 300) {
+                        console.log('[EmailService] Sent via EmailJS API');
+                        resolve({ success: true, response: raw });
+                    } else {
+                        reject(new Error(`EmailJS API ${res.statusCode}: ${raw}`));
+                    }
+                });
+            });
+
+            req.setTimeout(15000, () => { req.destroy(); reject(new Error('EmailJS API timed out')); });
+            req.on('error', (e) => reject(new Error(`EmailJS API network error: ${e.message}`)));
+            req.write(payload);
+            req.end();
+        });
+    }
 
     // ── Resend API (recommended for transactional emails) ─────────────────────
     if (activeProvider === 'resend-api') {
